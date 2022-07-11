@@ -1,0 +1,5 @@
+[flake8]
+ignore = B008, E501, W503
+exclude =
+    migrations,
+    alembic
