@@ -10,9 +10,9 @@ from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse, Response
 from starlette.routing import BaseRoute
 
-from src.api.deps import get_db, get_current_active_user
-from src import models
-from src.core.exceptions import ImproperlyConfigured, ObjectDoesNotExists
+from app import models
+from app.api.deps import get_db
+from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExists
 
 
 class BaseCrudRouter(APIRouter):
@@ -85,6 +85,8 @@ class BaseCrudRouter(APIRouter):
         path: str,
         endpoint: Callable[..., Any],
         *,
+        openapi_extra: Optional = None,
+        generate_unique_id_function: Optional = None,
         response_model: Optional[Type[Any]] = None,
         status_code: Optional[int] = None,
         response_description: Optional[str] = None,
@@ -114,6 +116,7 @@ class BaseCrudRouter(APIRouter):
         route_class_override: Optional[Type[APIRoute]] = None,
         callbacks: Optional[List[BaseRoute]] = None,
     ) -> None:
+
         if path in self.routes:
             self.remove_api_route(path, methods)
 
@@ -256,6 +259,14 @@ class CrudRouter(BaseCrudRouter):
         async def _get_all(
             skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
         ):
+            f"""
+            Retrieve {self.model.__name__}.
+            **Parameters**
+
+            *`skip`: Start offset
+            *`limit`: Limit of items to retrieve, works with offset
+            *`order_by`: Is used for ordering, `created` by default
+            """
             return self.model.manager(db).all(skip, limit, order_by, desc)
 
         return await _get_all(skip, limit, db)
@@ -269,9 +280,9 @@ class CrudRouter(BaseCrudRouter):
         return route
 
     def _get(self) -> Callable:
-        async def route(pk: int, db: Session = Depends(get_db)):
+        async def route(id: int, db: Session = Depends(get_db)):
             try:
-                return self.model.manager(db).get(pk=pk)
+                return self.model.manager(db).get(id=id)
             except ObjectDoesNotExists:
                 raise HTTPException(
                     status_code=400, detail=f"{self.model.__name__} does not exists"
@@ -281,66 +292,66 @@ class CrudRouter(BaseCrudRouter):
 
     def _update(self) -> Callable:
         async def route(
-            pk, update_schema: self.update_schema, db: Session = Depends(get_db)
+            id, update_schema: self.update_schema, db: Session = Depends(get_db)
         ):
             return self.model.manager(db).update(
-                pk, **update_schema.dict(exclude_unset=True)
+                id, **update_schema.dict(exclude_unset=True)
             )
 
         return route
 
     def _delete(self) -> Callable:
-        async def route(pk, db: Session = Depends(get_db)):
-            return self.model.manager(db).delete(self.model.manager(db).get(pk=pk))
+        async def route(id, db: Session = Depends(get_db)):
+            return self.model.manager(db).delete(self.model.manager(db).get(id=id))
 
         return route
 
 
-class AuthenticatedCrudRouter(CrudRouter):
-    """Crud router with authentication"""
+# class AuthenticatedCrudRouter(CrudRouter):
+#     """Crud router with authentication"""
 
-    def __init__(
-        self,
-        model,
-        get_schema: BaseModel,
-        create_schema: BaseModel,
-        update_schema: BaseModel = None,
-        db: Session = Depends(get_db),
-        prefix: Optional[str] = None,
-        tags: Optional[List] = [],
-        add_create_route: bool = False,
-        *args,
-        **kwargs,
-    ) -> None:
-        super().__init__(
-            model,
-            get_schema,
-            create_schema,
-            update_schema=update_schema,
-            db=db,
-            prefix=prefix,
-            tags=tags,
-            add_create_route=add_create_route,
-            *args,
-            **kwargs,
-        )
+#     def __init__(
+#         self,
+#         model,
+#         get_schema: BaseModel,
+#         create_schema: BaseModel,
+#         update_schema: BaseModel = None,
+#         db: Session = Depends(get_db),
+#         prefix: Optional[str] = None,
+#         tags: Optional[List] = [],
+#         add_create_route: bool = False,
+#         *args,
+#         **kwargs,
+#     ) -> None:
+#         super().__init__(
+#             model,
+#             get_schema,
+#             create_schema,
+#             update_schema=update_schema,
+#             db=db,
+#             prefix=prefix,
+#             tags=tags,
+#             add_create_route=add_create_route,
+#             *args,
+#             **kwargs,
+#         )
 
-        super().add_api_route(
-            "/",
-            self._create(),
-            methods=["POST"],
-            response_model=self.get_schema,
-            dependencies=[Depends(get_db)],
-            summary=f"Create {self.model.__name__}",
-            status_code=201,
-        )
+#         super().add_api_route(
+#             "/",
+#             self._create(),
+#             methods=["POST"],
+#             response_model=self.get_schema,
+#             dependencies=[Depends(get_db)],
+#             summary=f"Create {self.model.__name__}",
+#             status_code=201,
+#         )
 
-    def _create(self) -> Callable:
-        async def route(
-            instance_create_schema: self.create_schema,
-            db: Session = Depends(get_db),
-            user: models.User = Depends(get_current_active_user)
-        ):
-            return self.model.manager(db).create(instance_create_schema, user=user)
+#     def _create(self) -> Callable:
+#         async def route(
+#             instance_create_schema: self.create_schema,
+#             db: Session = Depends(get_db),
+#             user: models.User = Depends(get_current_active_user),
+#         ):
+#             return self.model.manager(db).create(instance_create_schema, user=user)
 
-        return route
+#         return route
