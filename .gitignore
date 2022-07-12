@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+alembic/
 
 # C extensions
 *.so
@@ -130,4 +131,3 @@ dmypy.json
 
 poetry.lock
 settings.ini
-alembic/
