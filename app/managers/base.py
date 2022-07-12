@@ -1,16 +1,14 @@
 from typing import List, Type, Union
 
-from fastapi import Depends
 from sqlalchemy import MetaData
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
 from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExists
 from app.db.base_class import Base
 
 
 class BaseManager:
-    def __init__(self, klass: Type, db: Session = Depends(get_db)) -> None:
+    def __init__(self, klass: Type, db: Session) -> None:
         if not issubclass(klass, Base):
             raise ImproperlyConfigured(f"Type {klass.__name__} is not suported.")
         self.model = klass
@@ -20,6 +18,7 @@ class BaseManager:
     def create(self, disable_check: bool = False, **fields):
         if not disable_check:
             self.check_fields(**fields)
+        print(fields)
         instance = self.model(**fields)
 
         self.db.add(instance)

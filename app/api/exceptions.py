@@ -1,0 +1,2 @@
+class WrongLoginCredentials(Exception):
+    pass

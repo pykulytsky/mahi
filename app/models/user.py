@@ -3,11 +3,11 @@ import uuid
 from sqlalchemy import Boolean, Column, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 
-from app.managers.base import BaseManagerMixin
+from app.managers.users import UserManagerMixin
 from app.models.base import Timestamped
 
 
-class User(Timestamped, BaseManagerMixin):
+class User(Timestamped, UserManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)

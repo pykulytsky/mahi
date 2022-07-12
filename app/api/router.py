@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse, Response
 from starlette.routing import BaseRoute
 
-from app import models
 from app.api.deps import get_db
 from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExists
 
@@ -210,6 +209,13 @@ class CrudRouter(BaseCrudRouter):
                 response_model=List[self.get_schema],
                 dependencies=[Depends(get_db)],
                 summary=f"Get all {self.model.__name__}`s",
+                description=f"""
+                Retrieve {self.model.__name__.lower()}s.
+                **Parameters**
+                *`skip`: Start offset
+                *`limit`: Limit of items to retrieve, works with offset
+                *`order_by`: Is used for ordering, `created` by default
+                """
             )
 
             if add_create_route:
@@ -221,14 +227,16 @@ class CrudRouter(BaseCrudRouter):
                     dependencies=[Depends(get_db)],
                     summary=f"Create {self.model.__name__}",
                     status_code=201,
+                    description=f"Create new {self.model.__name__.lower()}."
                 )
             super().add_api_route(
-                "/{pk}",
+                "/{id}",
                 self._get(),
                 methods=["GET"],
                 response_model=self.get_schema,
                 dependencies=[Depends(get_db)],
                 summary=f"Get {self.model.__name__}",
+                description=f"Get {self.model.__name__.lower()} by ID."
             )
             super().add_api_route(
                 "/{pk}",
@@ -259,14 +267,7 @@ class CrudRouter(BaseCrudRouter):
         async def _get_all(
             skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
         ):
-            f"""
-            Retrieve {self.model.__name__}.
-            **Parameters**
 
-            *`skip`: Start offset
-            *`limit`: Limit of items to retrieve, works with offset
-            *`order_by`: Is used for ordering, `created` by default
-            """
             return self.model.manager(db).all(skip, limit, order_by, desc)
 
         return await _get_all(skip, limit, db)
@@ -275,7 +276,8 @@ class CrudRouter(BaseCrudRouter):
         async def route(
             instance_create_schema: self.create_schema, db: Session = Depends(get_db)
         ):
-            return self.model.manager(db).create(instance_create_schema)
+            print(instance_create_schema)
+            return self.model.manager(db).create(**dict(instance_create_schema))
 
         return route
 
