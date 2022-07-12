@@ -18,7 +18,6 @@ class BaseManager:
     def create(self, disable_check: bool = False, **fields):
         if not disable_check:
             self.check_fields(**fields)
-        print(fields)
         instance = self.model(**fields)
 
         self.db.add(instance)

@@ -10,7 +10,7 @@ from app.core.config import settings
 from datetime import timedelta
 
 
-router = APIRouter()
+router = APIRouter(tags=["auth"])
 
 
 @router.post("/access-token", response_model=schemas.Token)

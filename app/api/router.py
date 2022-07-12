@@ -208,7 +208,7 @@ class CrudRouter(BaseCrudRouter):
                 self._get_all,
                 response_model=List[self.get_schema],
                 dependencies=[Depends(get_db)],
-                summary=f"Get all {self.model.__name__}`s",
+                summary=f"Get all {self.model.__name__.lower()}s",
                 description=f"""
                 Retrieve {self.model.__name__.lower()}s.
                 **Parameters**
@@ -225,7 +225,7 @@ class CrudRouter(BaseCrudRouter):
                     methods=["POST"],
                     response_model=self.get_schema,
                     dependencies=[Depends(get_db)],
-                    summary=f"Create {self.model.__name__}",
+                    summary=f"Create new {self.model.__name__.lower()}",
                     status_code=201,
                     description=f"Create new {self.model.__name__.lower()}."
                 )
@@ -235,7 +235,7 @@ class CrudRouter(BaseCrudRouter):
                 methods=["GET"],
                 response_model=self.get_schema,
                 dependencies=[Depends(get_db)],
-                summary=f"Get {self.model.__name__}",
+                summary=f"Get {self.model.__name__.lower()}",
                 description=f"Get {self.model.__name__.lower()} by ID."
             )
             super().add_api_route(
@@ -244,7 +244,8 @@ class CrudRouter(BaseCrudRouter):
                 methods=["PATCH"],
                 response_model=self.get_schema,
                 dependencies=[Depends(get_db)],
-                summary=f"Patch {self.model.__name__}",
+                summary=f"Patch {self.model.__name__.lower()}",
+                description=f"Patch {self.model.__name__.lower()} by ID."
             )
             super().add_api_route(
                 "/{pk}",
@@ -253,6 +254,7 @@ class CrudRouter(BaseCrudRouter):
                 response_model=self.get_schema,
                 dependencies=[Depends(get_db)],
                 summary=f"Delete {self.model.__name__}",
+                description=f"Delete {self.model.__name__.lower()} by ID."
             )
 
     async def _get_all(
@@ -276,7 +278,6 @@ class CrudRouter(BaseCrudRouter):
         async def route(
             instance_create_schema: self.create_schema, db: Session = Depends(get_db)
         ):
-            print(instance_create_schema)
             return self.model.manager(db).create(**dict(instance_create_schema))
 
         return route
