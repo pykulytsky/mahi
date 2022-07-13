@@ -10,8 +10,9 @@ from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse, Response
 from starlette.routing import BaseRoute
 
-from app.api.deps import get_db
+from app.api.deps import get_current_active_user, get_db
 from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExists
+from app import models
 
 
 class BaseCrudRouter(APIRouter):
@@ -310,51 +311,60 @@ class CrudRouter(BaseCrudRouter):
         return route
 
 
-# class AuthenticatedCrudRouter(CrudRouter):
-#     """Crud router with authentication"""
+class AuthenticatedCrudRouter(CrudRouter):
+    """Crud router with authentication"""
 
-#     def __init__(
-#         self,
-#         model,
-#         get_schema: BaseModel,
-#         create_schema: BaseModel,
-#         update_schema: BaseModel = None,
-#         db: Session = Depends(get_db),
-#         prefix: Optional[str] = None,
-#         tags: Optional[List] = [],
-#         add_create_route: bool = False,
-#         *args,
-#         **kwargs,
-#     ) -> None:
-#         super().__init__(
-#             model,
-#             get_schema,
-#             create_schema,
-#             update_schema=update_schema,
-#             db=db,
-#             prefix=prefix,
-#             tags=tags,
-#             add_create_route=add_create_route,
-#             *args,
-#             **kwargs,
-#         )
+    def __init__(
+        self,
+        model,
+        get_schema: BaseModel,
+        create_schema: BaseModel,
+        update_schema: BaseModel = None,
+        db: Session = Depends(get_db),
+        prefix: Optional[str] = None,
+        tags: Optional[List] = [],
+        add_create_route: bool = False,
+        owner_field_is_required: bool = False,
+        *args,
+        **kwargs,
+    ) -> None:
+        self.owner_field_is_required = owner_field_is_required
+        super().__init__(
+            model,
+            get_schema,
+            create_schema,
+            update_schema=update_schema,
+            db=db,
+            prefix=prefix,
+            tags=tags,
+            add_create_route=add_create_route,
+            *args,
+            **kwargs,
+        )
 
-#         super().add_api_route(
-#             "/",
-#             self._create(),
-#             methods=["POST"],
-#             response_model=self.get_schema,
-#             dependencies=[Depends(get_db)],
-#             summary=f"Create {self.model.__name__}",
-#             status_code=201,
-#         )
+        super().add_api_route(
+            "/",
+            self._create(),
+            methods=["POST"],
+            response_model=self.get_schema,
+            dependencies=[Depends(get_db)],
+            summary=f"Create {self.model.__name__}",
+            status_code=201,
+        )
 
-#     def _create(self) -> Callable:
-#         async def route(
-#             instance_create_schema: self.create_schema,
-#             db: Session = Depends(get_db),
-#             user: models.User = Depends(get_current_active_user),
-#         ):
-#             return self.model.manager(db).create(instance_create_schema, user=user)
+    def _create(self) -> Callable:
+        async def route(
+            instance_create_schema: self.create_schema,
+            db: Session = Depends(get_db),
+            user: models.User = Depends(get_current_active_user),
+        ):
+            if self.owner_field_is_required:
+                return self.model.manager(db).create(
+                    **dict(instance_create_schema),
+                    owner=user
+                )
+            return self.model.manager(db).create(
+                **dict(instance_create_schema),
+            )
 
-#         return route
+        return route

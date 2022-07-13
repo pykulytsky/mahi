@@ -2,6 +2,7 @@ import uuid
 
 from sqlalchemy import Boolean, Column, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from app.managers.users import UserManagerMixin
 from app.models.base import Timestamped
@@ -19,3 +20,5 @@ class User(Timestamped, UserManagerMixin):
     email_verified = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
+
+    projects = relationship("Project", back_populates="owner")

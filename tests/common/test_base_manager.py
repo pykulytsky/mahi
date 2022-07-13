@@ -14,7 +14,7 @@ def test_class_validation(db):
 
 
 def test_manager_all(manager, user):
-    assert manager.all()[0] == user
+    assert user in manager.all()
 
 
 def test_manager_get(user, manager):
