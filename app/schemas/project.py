@@ -1,13 +1,12 @@
-from typing import List, Optional
-
 from pydantic import BaseModel
+from .tasks import Task
 
 
 class ProjectBase(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    icon: Optional[str] = None
-    accent_color: Optional[str] = None
+    name: str | None = None
+    description: str | None = None
+    icon: str | None = None
+    accent_color: str | None = None
 
 
 class ProjectCreate(ProjectBase):
@@ -15,13 +14,13 @@ class ProjectCreate(ProjectBase):
 
 
 class ProjectUpdate(ProjectBase):
-    is_favorite: Optional[bool] = False
-    is_pinned: Optional[bool] = False
+    is_favorite: bool | None = False
+    is_pinned: bool | None = False
 
 
 class ProjectInDBBase(ProjectBase):
-    id: Optional[int] = None
-    tags: Optional[List[int]] = None
+    id: int | None = None
+    tags: list[int] | None = None
 
     class Config:
         orm_mode = True
@@ -29,3 +28,4 @@ class ProjectInDBBase(ProjectBase):
 
 class Project(ProjectInDBBase):
     owner_id: int
+    tasks: list[Task]

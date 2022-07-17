@@ -8,5 +8,5 @@ router = AuthenticatedCrudRouter(
     create_schema=schemas.TagCreate,
     update_schema=schemas.TagUpdate,
     prefix="/tags",
-    tags=["todo"],
+    tags=["task"],
 )

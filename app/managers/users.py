@@ -4,7 +4,6 @@ from typing import Any, Type
 import jwt
 from passlib.hash import pbkdf2_sha256
 
-from app import schemas
 from app.api.exceptions import WrongLoginCredentials
 from app.core.config import settings
 from app.core.exceptions import ObjectDoesNotExists
@@ -46,9 +45,7 @@ class UserManager(BaseManager):
             raise WrongLoginCredentials("No user with such email was found.")
 
     def generate_access_token(
-        self,
-        subject: str | Any,
-        expires_delta: timedelta = None
+        self, subject: str | Any, expires_delta: timedelta = None
     ) -> str:
         if expires_delta:
             expire = datetime.utcnow() + expires_delta

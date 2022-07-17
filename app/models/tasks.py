@@ -1,7 +1,8 @@
-from app.models.base import Timestamped
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, Date
+from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
 from app.managers.base import BaseManagerMixin
+from app.models.base import Timestamped
 
 
 class Project(Timestamped, BaseManagerMixin):
@@ -14,33 +15,34 @@ class Project(Timestamped, BaseManagerMixin):
 
     is_favorite = Column(Boolean, default=False)
     is_pinned = Column(Boolean, default=False)
+    is_editable = Column(Boolean, default=True)
     accent_color = Column(String, nullable=True)
     icon = Column(String, nullable=True)
 
-    todos = relationship("TodoItem", back_populates="project")
+    tasks = relationship("Task", back_populates="project")
 
 
 class Tag(Timestamped, BaseManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=False, nullable=False)
     color = Column(String, nullable=True)
-    todo_items = relationship('TodoItem', secondary='tagitem', back_populates='tags')
+    tasks = relationship("Task", secondary="tagitem", back_populates="tags")
 
 
 class TagItem(Timestamped):
     id = Column(Integer, primary_key=True, index=True)
     tag_id = Column(Integer, ForeignKey("tag.id"))
-    todo_item_id = Column(Integer, ForeignKey("todoitem.id"))
+    task_id = Column(Integer, ForeignKey("task.id"))
 
 
-class TodoItem(Timestamped, BaseManagerMixin):
+class Task(Timestamped, BaseManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=False, nullable=False)
     description = Column(String, unique=False, nullable=True)
     deadline = Column(Date, nullable=True)
 
     is_done = Column(Boolean, default=False)
-    tags = relationship("Tag", secondary="tagitem", back_populates="todo_items")
+    tags = relationship("Tag", secondary="tagitem", back_populates="tasks")
 
     project_id = Column(Integer, ForeignKey("project.id"))
-    project = relationship("Project", back_populates="todos")
+    project = relationship("Project", back_populates="tasks")

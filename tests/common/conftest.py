@@ -1,7 +1,7 @@
 import pytest
 
-from app.models import User
 from app.managers import BaseManager
+from app.models import User
 
 
 @pytest.fixture

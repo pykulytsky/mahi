@@ -1,2 +1,2 @@
+from .tasks import Project, Tag, TagItem, Task  # noqa
 from .user import User  # noqa
-from .todo import Project, Tag, TagItem, TodoItem

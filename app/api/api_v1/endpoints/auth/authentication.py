@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -5,10 +7,8 @@ from sqlalchemy.orm import Session
 from app import schemas
 from app.api import deps
 from app.api.exceptions import WrongLoginCredentials
-from app.models import User
 from app.core.config import settings
-from datetime import timedelta
-
+from app.models import User
 
 router = APIRouter(tags=["auth"])
 
@@ -24,15 +24,12 @@ def get_access_token(
         user = User.manager(db).authenticate(
             email=form_data.username, password=form_data.password
         )
-        access_token_expires = timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         return {
             "access_token": User.manager(db).generate_access_token(
-                subject=user.id,
-                expires_delta=access_token_expires
+                subject=user.id, expires_delta=access_token_expires
             ),
-            "token_type": "bearer"
+            "token_type": "bearer",
         }
     except WrongLoginCredentials as e:
         raise HTTPException(status_code=403, detail=str(e))

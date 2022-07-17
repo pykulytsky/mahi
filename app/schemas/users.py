@@ -1,13 +1,11 @@
-from typing import Optional
-
 from pydantic import BaseModel, EmailStr
 
 
 # Shared properties
 class UserBase(BaseModel):
-    email: Optional[EmailStr] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    email: EmailStr | None = None
+    first_name: str | None = None
+    last_name: str | None = None
 
 
 class UserCreate(UserBase):
@@ -16,12 +14,12 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(UserBase):
-    password: Optional[str] = None
+    password: str | None = None
 
 
 class UserInDBBase(UserBase):
-    id: Optional[int] = None
-    email_verified: Optional[bool] = False
+    id: int | None = None
+    email_verified: bool | None = False
 
     class Config:
         orm_mode = True

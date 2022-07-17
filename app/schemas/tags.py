@@ -1,11 +1,9 @@
-from typing import List, Optional
-
 from pydantic import BaseModel
 
 
 class TagBase(BaseModel):
-    color: Optional[str] = None
-    name: Optional[str] = None
+    color: str | None = None
+    name: str | None = None
 
 
 class TagCreate(TagBase):
@@ -18,7 +16,7 @@ class TagUpdate(TagBase):
 
 class Tag(TagBase):
     id: int
-    projects: List[int]
+    projects: list[int]
 
     class Config:
         orm_mode = True

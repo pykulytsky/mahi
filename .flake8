@@ -2,4 +2,6 @@
 ignore = B008, E501, W503
 exclude =
     migrations,
-    alembic
+    alembic,
+    __init__.py,
+    app/db/base.py

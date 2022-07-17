@@ -10,9 +10,9 @@ from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse, Response
 from starlette.routing import BaseRoute
 
+from app import models
 from app.api.deps import get_current_active_user, get_db
 from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExists
-from app import models
 
 
 class BaseCrudRouter(APIRouter):
@@ -216,7 +216,7 @@ class CrudRouter(BaseCrudRouter):
                 *`skip`: Start offset
                 *`limit`: Limit of items to retrieve, works with offset
                 *`order_by`: Is used for ordering, `created` by default
-                """
+                """,
             )
 
             if add_create_route:
@@ -228,7 +228,7 @@ class CrudRouter(BaseCrudRouter):
                     dependencies=[Depends(get_db)],
                     summary=f"Create new {self.model.__name__.lower()}",
                     status_code=201,
-                    description=f"Create new {self.model.__name__.lower()}."
+                    description=f"Create new {self.model.__name__.lower()}.",
                 )
             super().add_api_route(
                 "/{id}",
@@ -237,25 +237,25 @@ class CrudRouter(BaseCrudRouter):
                 response_model=self.get_schema,
                 dependencies=[Depends(get_db)],
                 summary=f"Get {self.model.__name__.lower()}",
-                description=f"Get {self.model.__name__.lower()} by ID."
+                description=f"Get {self.model.__name__.lower()} by ID.",
             )
             super().add_api_route(
-                "/{pk}",
+                "/{id}",
                 self._update(),
                 methods=["PATCH"],
                 response_model=self.get_schema,
                 dependencies=[Depends(get_db)],
                 summary=f"Patch {self.model.__name__.lower()}",
-                description=f"Patch {self.model.__name__.lower()} by ID."
+                description=f"Patch {self.model.__name__.lower()} by ID.",
             )
             super().add_api_route(
-                "/{pk}",
+                "/{id}",
                 self._delete(),
                 methods=["DELETE"],
                 response_model=self.get_schema,
                 dependencies=[Depends(get_db)],
                 summary=f"Delete {self.model.__name__}",
-                description=f"Delete {self.model.__name__.lower()} by ID."
+                description=f"Delete {self.model.__name__.lower()} by ID.",
             )
 
     async def _get_all(
@@ -360,8 +360,7 @@ class AuthenticatedCrudRouter(CrudRouter):
         ):
             if self.owner_field_is_required:
                 return self.model.manager(db).create(
-                    **dict(instance_create_schema),
-                    owner=user
+                    **dict(instance_create_schema), owner=user
                 )
             return self.model.manager(db).create(
                 **dict(instance_create_schema),

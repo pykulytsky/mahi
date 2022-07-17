@@ -27,19 +27,13 @@ def test_use_unsuported_fields(user, manager):
 
 
 def test_get_with_multiply_fields(manager, user):
-    assert (
-        manager.get(id=user.id, email=user.email, first_name=user.first_name)
-        == user
-    )
+    assert manager.get(id=user.id, email=user.email, first_name=user.first_name) == user
 
 
 def test_filter(manager, user):
     assert (
-        manager.filter(
-            id=user.id,
-            email=user.email,
-            first_name=user.first_name
-        )[0] == user
+        manager.filter(id=user.id, email=user.email, first_name=user.first_name)[0]
+        == user
     )
 
 
@@ -52,7 +46,9 @@ def test_check_fields(mocker, manager, user):
 
 
 def test_create(manager):
-    user = manager.create(email="world", password="!!!", first_name="test", last_name="tetest")
+    user = manager.create(
+        email="world", password="!!!", first_name="test", last_name="tetest"
+    )
 
     assert manager.exists(email="world", first_name="test")
 
@@ -61,7 +57,9 @@ def test_create(manager):
 
 @pytest.mark.skip()
 def test_order_by(manager):
-    user = manager.create(email="world", password="!!!", first_name="test", last_name="tetest")
+    user = manager.create(
+        email="world", password="!!!", first_name="test", last_name="tetest"
+    )
     older_one = manager.create(
         email="world1", password="!!!", first_name="test", last_name="tetest"
     )
