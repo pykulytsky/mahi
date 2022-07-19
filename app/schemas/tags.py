@@ -14,9 +14,12 @@ class TagUpdate(TagBase):
     pass
 
 
-class Tag(TagBase):
+class TagInDB(TagBase):
     id: int
-    projects: list[int]
 
     class Config:
         orm_mode = True
+
+
+class Tag(TagInDB):
+    pass

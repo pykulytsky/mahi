@@ -7,6 +7,9 @@ class ProjectBase(BaseModel):
     description: str | None = None
     icon: str | None = None
     accent_color: str | None = None
+    is_favorite: bool | None = False
+    is_pinned: bool | None = False
+    is_editable: bool | None = False
 
 
 class ProjectCreate(ProjectBase):
@@ -14,8 +17,7 @@ class ProjectCreate(ProjectBase):
 
 
 class ProjectUpdate(ProjectBase):
-    is_favorite: bool | None = False
-    is_pinned: bool | None = False
+    pass
 
 
 class ProjectInDBBase(ProjectBase):

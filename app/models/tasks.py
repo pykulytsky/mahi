@@ -28,8 +28,11 @@ class Tag(Timestamped, BaseManagerMixin):
     color = Column(String, nullable=True)
     tasks = relationship("Task", secondary="tagitem", back_populates="tags")
 
+    owner_id = Column(Integer, ForeignKey("user.id"))
+    owner = relationship("User", back_populates="tags")
 
-class TagItem(Timestamped):
+
+class TagItem(Timestamped, BaseManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
     tag_id = Column(Integer, ForeignKey("tag.id"))
     task_id = Column(Integer, ForeignKey("task.id"))

@@ -1,5 +1,5 @@
 from datetime import date
-
+from .tags import TagInDB
 from pydantic import BaseModel
 
 
@@ -21,10 +21,11 @@ class TaskUpdate(TaskBase):
 class TaskInDBBase(TaskBase):
     id: int | None = None
     project_id: int
+    is_done: bool
 
     class Config:
         orm_mode = True
 
 
 class Task(TaskInDBBase):
-    pass
+    tags: list[TagInDB] | None = None

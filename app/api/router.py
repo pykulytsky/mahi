@@ -36,8 +36,7 @@ class BaseCrudRouter(APIRouter):
     ) -> None:
         if not hasattr(model, "manager"):
             raise AttributeError(
-                f"Model {model.__name__} not suported, \
-                    model must have a 'manager' field."
+                f"Model {model.__name__} is not suported, 'manager' field is required."
             )
 
         self.model = model

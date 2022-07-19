@@ -22,3 +22,4 @@ class User(Timestamped, UserManagerMixin):
     is_superuser = Column(Boolean, default=False)
 
     projects = relationship("Project", back_populates="owner")
+    tags = relationship("Tag", back_populates="owner")

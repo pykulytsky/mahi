@@ -83,12 +83,37 @@ class BaseManager:
 
         return instance
 
-    def filter(self, **fields):
+    def filter(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        order_by: str = "created",
+        desc: bool = False,
+        **fields
+    ):
         self.check_fields(**fields)
 
         expression = [getattr(self.model, k) == fields[k] for k in fields.keys()]
-
-        return self.db.query(self.model).filter(*expression).all()
+        try:
+            if desc:
+                return (
+                    self.db.query(self.model)
+                    .order_by(getattr(self.model, order_by).desc(), self.model.created.desc())
+                    .filter(*expression)
+                    .offset(skip)
+                    .limit(limit)
+                    .all()
+                )
+            return (
+                self.db.query(self.model)
+                .order_by(getattr(self.model, order_by), self.model.created.desc())
+                .filter(*expression)
+                .offset(skip)
+                .limit(limit)
+                .all()
+            )
+        except AttributeError:
+            return self.db.query(self.model).filter(*expression).offset(skip).limit(limit).all()
 
     def get_or_false(self, **fields) -> Union[Type, bool]:
         try:
