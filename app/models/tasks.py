@@ -1,6 +1,7 @@
 from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
+from app.db.types import Priority
 from app.managers.base import BaseManagerMixin
 from app.models.base import Timestamped
 
@@ -18,6 +19,8 @@ class Project(Timestamped, BaseManagerMixin):
     is_editable = Column(Boolean, default=True)
     accent_color = Column(String, nullable=True)
     icon = Column(String, nullable=True)
+
+    sort_tasks_by = Column(String, default="is_done")
 
     tasks = relationship("Task", back_populates="project")
 
@@ -40,9 +43,14 @@ class TagItem(Timestamped, BaseManagerMixin):
 
 class Task(Timestamped, BaseManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
+
+    parent_task_id = Column(Integer, ForeignKey("task.id"))
+    subtasks = relationship("Task")
+
     name = Column(String, unique=False, nullable=False)
     description = Column(String, unique=False, nullable=True)
     deadline = Column(Date, nullable=True)
+    priority = Column(Priority, nullable=True)
 
     is_done = Column(Boolean, default=False)
     tags = relationship("Tag", secondary="tagitem", back_populates="tasks")

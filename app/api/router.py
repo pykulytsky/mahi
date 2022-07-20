@@ -1,5 +1,4 @@
-from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, Type,
-                    Union)
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Type, Union
 
 from fastapi import APIRouter, Depends, HTTPException, params
 from fastapi.datastructures import Default, DefaultPlaceholder
@@ -253,7 +252,7 @@ class CrudRouter(BaseCrudRouter):
                 methods=["DELETE"],
                 response_model=self.get_schema,
                 dependencies=[Depends(get_db)],
-                summary=f"Delete {self.model.__name__}",
+                summary=f"Delete {self.model.__name__.lower()}",
                 description=f"Delete {self.model.__name__.lower()} by ID.",
             )
 

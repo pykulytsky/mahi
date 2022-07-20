@@ -1,12 +1,15 @@
 from datetime import date
-from .tags import TagInDB
+
 from pydantic import BaseModel
+
+from .tags import TagInDB
 
 
 class TaskBase(BaseModel):
     description: str | None = None
     deadline: date | None = None
     name: str | None = None
+    priority: str | None = None
 
 
 class TaskCreate(TaskBase):

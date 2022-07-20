@@ -89,7 +89,7 @@ class BaseManager:
         limit: int = 100,
         order_by: str = "created",
         desc: bool = False,
-        **fields
+        **fields,
     ):
         self.check_fields(**fields)
 
@@ -98,7 +98,9 @@ class BaseManager:
             if desc:
                 return (
                     self.db.query(self.model)
-                    .order_by(getattr(self.model, order_by).desc(), self.model.created.desc())
+                    .order_by(
+                        getattr(self.model, order_by).desc(), self.model.updated.desc()
+                    )
                     .filter(*expression)
                     .offset(skip)
                     .limit(limit)
@@ -106,14 +108,20 @@ class BaseManager:
                 )
             return (
                 self.db.query(self.model)
-                .order_by(getattr(self.model, order_by), self.model.created.desc())
+                .order_by(getattr(self.model, order_by), self.model.updated.desc())
                 .filter(*expression)
                 .offset(skip)
                 .limit(limit)
                 .all()
             )
         except AttributeError:
-            return self.db.query(self.model).filter(*expression).offset(skip).limit(limit).all()
+            return (
+                self.db.query(self.model)
+                .filter(*expression)
+                .offset(skip)
+                .limit(limit)
+                .all()
+            )
 
     def get_or_false(self, **fields) -> Union[Type, bool]:
         try:

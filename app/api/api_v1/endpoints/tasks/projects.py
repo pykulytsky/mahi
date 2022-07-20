@@ -1,11 +1,10 @@
-from app import schemas
-from app.api.router import AuthenticatedCrudRouter
-from app.models import Project, User
-from app.api.deps import get_db, get_current_active_user
-
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from app import schemas
+from app.api.deps import get_current_active_user, get_db
+from app.api.router import AuthenticatedCrudRouter
+from app.models import Project, Task, User
 
 router = AuthenticatedCrudRouter(
     model=Project,
@@ -24,3 +23,16 @@ async def get_user_projects(
     user: User = Depends(get_current_active_user),
 ):
     return Project.manager(db).filter(owner=user)
+
+
+@router.get("/{project_id}/tasks", response_model=list[schemas.Task])
+async def get_tasks_by_project(
+    project_id,
+    skip: int = 0,
+    limit: int = 100,
+    order_by: str = "created",
+    desc: bool = False,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+):
+    return Task.manager(db).filter(skip, limit, order_by, desc, project_id=project_id)

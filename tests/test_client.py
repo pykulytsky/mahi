@@ -3,8 +3,15 @@ import typing
 import requests
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from starlette.testclient import (ASGI2App, ASGI3App, Cookies, DataType,
-                                  FileType, Params, TimeOut)
+from starlette.testclient import (
+    ASGI2App,
+    ASGI3App,
+    Cookies,
+    DataType,
+    FileType,
+    Params,
+    TimeOut,
+)
 
 from app import schemas
 from app.models import User
