@@ -23,6 +23,7 @@ class Project(Timestamped, BaseManagerMixin):
     sort_tasks_by = Column(String, default="is_done")
 
     tasks = relationship("Task", back_populates="project")
+    related_activities = relationship("Activity", back_populates="project")
 
 
 class Tag(Timestamped, BaseManagerMixin):
@@ -33,6 +34,7 @@ class Tag(Timestamped, BaseManagerMixin):
 
     owner_id = Column(Integer, ForeignKey("user.id"))
     owner = relationship("User", back_populates="tags")
+    related_activities = relationship("Activity", back_populates="tag")
 
 
 class TagItem(Timestamped, BaseManagerMixin):
@@ -57,3 +59,5 @@ class Task(Timestamped, BaseManagerMixin):
 
     project_id = Column(Integer, ForeignKey("project.id"))
     project = relationship("Project", back_populates="tasks")
+
+    related_activities = relationship("Activity", back_populates="task")

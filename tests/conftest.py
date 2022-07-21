@@ -1,3 +1,4 @@
+from datetime import timedelta
 import pytest
 from fastapi.testclient import TestClient
 
@@ -37,9 +38,6 @@ def user(db):
         last_name="Testov",
         password="1234",
     )
-    user.email_verified = True
-    db.commit()
-    db.refresh(user)
     yield user
     db.delete(user)
     db.commit()
@@ -53,8 +51,6 @@ def another_user(db):
         last_name="Testov",
         password="1234",
     )
-    db.commit()
-    db.refresh(user)
     yield user
     db.delete(user)
     db.commit()
@@ -63,3 +59,19 @@ def another_user(db):
 @pytest.fixture()
 def auth_client(db, user):
     return JWTAuthTestClient(app, user=user, db=db)
+
+
+@pytest.fixture
+def token(db, user):
+    access_token_expires = timedelta(minutes=99999)
+    return User.manager(db).generate_access_token(
+        subject=user.id, expires_delta=access_token_expires
+    )
+
+
+@pytest.fixture
+def another_token(db, another_user):
+    access_token_expires = timedelta(minutes=99999)
+    return User.manager(db).generate_access_token(
+        subject=another_user.id, expires_delta=access_token_expires
+    )

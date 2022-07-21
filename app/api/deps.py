@@ -30,7 +30,7 @@ def get_current_user(
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
         )
         token_data = schemas.TokenPayload(**payload)
-    except (jwt.JWTError, ValidationError):
+    except (jwt.PyJWTError, ValidationError):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
@@ -56,4 +56,12 @@ def get_current_active_superuser(
         raise HTTPException(
             status_code=400, detail="The user doesn't have enough privileges"
         )
+    return current_user
+
+
+def get_current_verified_user(
+    current_user: models.User = Depends(get_current_user),
+) -> models.User:
+    if not current_user.email_verified:
+        raise HTTPException(status_code=400, detail="Email is not verified")
     return current_user
