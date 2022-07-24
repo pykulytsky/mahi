@@ -1,15 +1,13 @@
 import uuid
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Unicode
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship
 
 from app.managers.base import BaseManagerMixin
 from app.managers.users import UserManagerMixin
 from app.models.base import Timestamped
-
-from sqlalchemy_utils import generic_relationship
 
 
 class User(Timestamped, UserManagerMixin):
@@ -19,6 +17,7 @@ class User(Timestamped, UserManagerMixin):
 
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
+    avatar = Column(String, nullable=True)
 
     verification_code = Column(UUID(as_uuid=True), default=uuid.uuid4())
     email_verified = Column(Boolean, default=False)

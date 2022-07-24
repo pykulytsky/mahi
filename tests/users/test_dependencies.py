@@ -1,7 +1,7 @@
-from app.api import deps
 import pytest
 from fastapi.exceptions import HTTPException
 
+from app.api import deps
 from app.models.user import User
 
 
@@ -12,7 +12,7 @@ def test_get_current_user(db, another_token):
 
 
 def test_get_current_user_doesnt_exists(db):
-    with pytest.raises(HTTPException) as e:
+    with pytest.raises(HTTPException):
         deps.get_current_user(db, "NOT TOKEN")
 
 

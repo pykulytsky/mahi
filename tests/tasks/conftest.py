@@ -1,14 +1,11 @@
-from app.models import Project, Task, Tag, TagItem
 import pytest
+
+from app.models import Project, Tag, TagItem, Task
 
 
 @pytest.fixture
 def project(db, user):
-    project = Project.manager(db).create(
-        id=9999,
-        name="Test proejct",
-        owner=user
-    )
+    project = Project.manager(db).create(id=9999, name="Test proejct", owner=user)
     yield project
     db.delete(project)
     db.commit()
@@ -16,11 +13,7 @@ def project(db, user):
 
 @pytest.fixture
 def task(db, project):
-    task = Task.manager(db).create(
-        id=9999,
-        name="Test task",
-        project=project
-    )
+    task = Task.manager(db).create(id=9999, name="Test task", project=project)
     yield task
     db.delete(task)
     db.commit()
@@ -28,17 +21,8 @@ def task(db, project):
 
 @pytest.fixture
 def tag(db, task, user):
-    tag = Tag.manager(db).create(
-        id=9999,
-        name="Test tag",
-        color="primary",
-        owner=user
-    )
-    TagItem.manager(db).create(
-        id=9999,
-        tag_id=tag.id,
-        task_id=task.id
-    )
+    tag = Tag.manager(db).create(id=9999, name="Test tag", color="primary", owner=user)
+    TagItem.manager(db).create(id=9999, tag_id=tag.id, task_id=task.id)
     yield tag
     db.delete(tag)
     db.commit()
