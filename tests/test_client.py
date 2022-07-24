@@ -21,7 +21,7 @@ class BearerAuth(requests.auth.AuthBase):
     """Base Bearer authentication"""
 
     def __init__(self, token):
-        self.token = token
+        self.token = token.decode("utf-8")
 
     def __call__(self, request):
         request.headers["authorization"] = "Bearer " + self.token
@@ -34,7 +34,7 @@ class JWTAuthTestClient(TestClient):
         app: typing.Union[ASGI2App, ASGI3App],
         user: schemas.User,
         db: Session,
-        base_url: str = "http://testserver",
+        base_url: str = "http://testserver/api/v1/",
         raise_server_exceptions: bool = True,
         root_path: str = "",
     ) -> None:
