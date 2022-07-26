@@ -6,6 +6,10 @@ from app.core.config import settings
 import jwt
 
 
+def test_token(token):
+    assert False, token
+
+
 def test_get_user(client, user):
     response = client.get(f"users/{user.id}")
 
