@@ -45,10 +45,9 @@ jobs:
       - name: Setup PostgreSQL
         uses: Harmon758/postgresql-action@v1.0.0
         with:
-          postgresql version: 12.2
-          postgresql db: 'demando'
-          postgresql user: 'demando'
-          postgresql password: '1234'
+          postgresql db: ${{secrets.POSTGRES_DB}}
+          postgresql user: ${{secrets.POSTGRES_USER}}
+          postgresql password: ${{secrets.POSTGRES_PASSWORD}}
       - name: Setup Redis
         uses: zhulik/redis-action@1.1.0
       - name: Bootstrap poetry
@@ -76,7 +75,6 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: python -m poetry install
-
       - name: Run pytest
         shell: bash
         run: python -m poetry run pytest -x --cov --cov-report=xml
@@ -85,6 +83,10 @@ jobs:
           POSTGRES_USER: ${{secrets.POSTGRES_USER}}
           POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
           BACKEND_CORS_ORIGINS: ${{secrets.BACKEND_CORS_ORIGINS}}
+          CODECOV_TOKEN: ${{CODECOV_TOKEN}}
+          PROJECT_NAME: mahi
+          FIRST_SUPERUSER: ${{FIRST_SUPERUSER}}
+          FIRST_SUPERUSER_PASSWORD: ${{FIRST_SUPERUSER_PASSWORD}}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
