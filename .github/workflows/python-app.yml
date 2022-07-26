@@ -83,10 +83,10 @@ jobs:
           POSTGRES_USER: ${{secrets.POSTGRES_USER}}
           POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
           BACKEND_CORS_ORIGINS: ${{secrets.BACKEND_CORS_ORIGINS}}
-          CODECOV_TOKEN: ${{CODECOV_TOKEN}}
+          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
           PROJECT_NAME: mahi
-          FIRST_SUPERUSER: ${{FIRST_SUPERUSER}}
-          FIRST_SUPERUSER_PASSWORD: ${{FIRST_SUPERUSER_PASSWORD}}
+          FIRST_SUPERUSER: ${{secrets.FIRST_SUPERUSER}}
+          FIRST_SUPERUSER_PASSWORD: ${{secrets.FIRST_SUPERUSER_PASSWORD}}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
