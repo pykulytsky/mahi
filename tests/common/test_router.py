@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from app import schemas
 from app.api.router import CrudRouter
 from app.models import Task
+from app.main import app
 
 
 class SomeClass:
@@ -104,7 +105,10 @@ def test_update_route(router):
     assert route.path == "/test/{id}"
     assert route.methods == {"PATCH"}
 
+def test_get_routes():
+    assert False, [{"path": route.path, "name": route.name} for route in app.routes][5:]
 
+    
 def test_delete_route(router):
     route = router.routes[4]
 
