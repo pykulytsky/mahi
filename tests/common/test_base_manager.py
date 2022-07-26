@@ -77,3 +77,8 @@ def test_update(manager, user):
 
     assert first_name != "changed"
     assert manager.get(id=user.id).first_name == "changed"
+
+
+def test_instance_exists(manager, user):
+    assert manager.exists(id=user.id)
+    assert not manager.exists(id=123243444433443)

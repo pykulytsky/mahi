@@ -8,6 +8,7 @@ from app.api.exceptions import WrongLoginCredentials
 from app.core.config import settings
 from app.core.exceptions import ObjectDoesNotExists
 from app.managers.base import BaseManager, BaseManagerMixin
+from app import models
 
 
 class UserManager(BaseManager):
@@ -18,6 +19,7 @@ class UserManager(BaseManager):
         instance = super().create(disable_check=True, **fields)
 
         self.refresh(instance)
+        self.create_activity_journal(user=instance)
 
         return instance
 
@@ -58,6 +60,20 @@ class UserManager(BaseManager):
             to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
         )
         return encoded_jwt
+
+    def create_activity_journal(self, user):
+        return models.ActivityJournal.manager(self.db).create(
+            user=user
+        )
+
+    def delete(self, instance):
+        try:
+            models.ActivityJournal.manager(self.db).delete(
+                models.ActivityJournal.manager(self.db).get(user_id=instance.id)
+            )
+        except ObjectDoesNotExists:
+            pass
+        return super().delete(instance)
 
 
 class UserManagerMixin(BaseManagerMixin):
