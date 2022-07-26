@@ -77,7 +77,7 @@ jobs:
         run: python -m poetry install
       - name: Run pytest
         shell: bash
-        run: python -m poetry run pytest -x --cov --cov-report=xml
+        run: python -m poetry run pytest --cov --cov-report=xml
         env:
           POSTGRES_DB: ${{secrets.POSTGRES_DB}}
           POSTGRES_USER: ${{secrets.POSTGRES_USER}}
