@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel, EmailStr
 
 
@@ -33,3 +34,19 @@ class User(UserInDBBase):
 # Additional properties stored in DB
 class UserInDB(UserInDBBase):
     password: str
+
+
+class Activity(BaseModel):
+    id: int
+    journal_id: int | None = None
+    action: str
+    created: datetime
+
+    project_id: int | None = None
+    task_id: int | None = None
+    tag_id: int | None = None
+
+    actor: User
+
+    class Config:
+        orm_mode = True
