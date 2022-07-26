@@ -44,6 +44,11 @@ def user(db):
     db.commit()
 
 
+@pytest.fixture
+def journal(user):
+    return user.journal
+
+
 @pytest.fixture()
 def another_user(db):
     user = User.manager(db).create(

@@ -65,10 +65,14 @@ class Activity(Timestamped, BaseManagerMixin):
 
     @hybrid_property
     def target(self):
-        return self.project | self.task | self.tag
+        if self.project:
+            return self.project
+        if self.tag:
+            return self.tag
+        if self.task:
+            return self.task
 
     @hybrid_property
     def summary(self) -> str | None:
-        actor = self.actor.full_name if self.actor else "You"
         if self.target:
-            return f"{actor} {self.action} {self.target.name}"
+            return f"{self.actor} {self.action} {self.target}"

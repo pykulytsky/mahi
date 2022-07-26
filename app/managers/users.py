@@ -19,6 +19,7 @@ class UserManager(BaseManager):
         instance = super().create(disable_check=True, **fields)
 
         self.refresh(instance)
+
         self.create_activity_journal(user=instance)
 
         return instance

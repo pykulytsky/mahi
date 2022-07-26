@@ -3,10 +3,11 @@ from sqlalchemy.orm import relationship
 
 from app.db.types import Priority
 from app.managers.base import BaseManagerMixin
+from app.managers.tasks import TasksManagerMixin
 from app.models.base import Timestamped
 
 
-class Project(Timestamped, BaseManagerMixin):
+class Project(Timestamped, TasksManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=False, nullable=False)
     description = Column(String, unique=False, nullable=True)
@@ -26,7 +27,7 @@ class Project(Timestamped, BaseManagerMixin):
     related_activities = relationship("Activity", back_populates="project")
 
 
-class Tag(Timestamped, BaseManagerMixin):
+class Tag(Timestamped, TasksManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=False, nullable=False)
     color = Column(String, nullable=True)
@@ -43,7 +44,7 @@ class TagItem(Timestamped, BaseManagerMixin):
     task_id = Column(Integer, ForeignKey("task.id"))
 
 
-class Task(Timestamped, BaseManagerMixin):
+class Task(Timestamped, TasksManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
 
     parent_task_id = Column(Integer, ForeignKey("task.id"))
