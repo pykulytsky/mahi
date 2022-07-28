@@ -1,5 +1,6 @@
+from app.models import tasks, user
+
 from .base import BaseManager, BaseManagerMixin
-from app.models import user, tasks
 
 
 class TasksManager(BaseManager):
@@ -22,23 +23,16 @@ class TasksManager(BaseManager):
         if isinstance(instance, tasks.Task):
             actor = instance.project.owner
         elif isinstance(instance, tasks.TagItem):
-            actor = tasks.Tag.manager(self.db).get(
-                id=instance.tag_id
-            ).owner
+            actor = tasks.Tag.manager(self.db).get(id=instance.tag_id).owner
         else:
             actor = instance.owner
 
         if not actor.journal:
-            user.ActivityJournal.manager(self.db).create(
-                user=actor
-            )
+            user.ActivityJournal.manager(self.db).create(user=actor)
 
         target = {self.model.__name__.lower(): instance}
         return user.Activity.manager(self.db).create(
-            journal=actor.journal,
-            actor=actor,
-            action=action,
-            **target
+            journal=actor.journal, actor=actor, action=action, **target
         )
 
 

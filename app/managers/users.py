@@ -4,11 +4,11 @@ from typing import Any, Type
 import jwt
 from passlib.hash import pbkdf2_sha256
 
+from app import models
 from app.api.exceptions import WrongLoginCredentials
 from app.core.config import settings
 from app.core.exceptions import ObjectDoesNotExists
 from app.managers.base import BaseManager, BaseManagerMixin
-from app import models
 
 
 class UserManager(BaseManager):
@@ -63,9 +63,7 @@ class UserManager(BaseManager):
         return encoded_jwt
 
     def create_activity_journal(self, user):
-        return models.ActivityJournal.manager(self.db).create(
-            user=user
-        )
+        return models.ActivityJournal.manager(self.db).create(user=user)
 
     def delete(self, instance):
         try:

@@ -23,7 +23,5 @@ async def get_me(
 
 
 @router.get("/me/activities", response_model=list[schemas.Activity])
-async def get_my_activities(
-    user: User = Depends(get_current_active_user)
-):
+async def get_my_activities(user: User = Depends(get_current_active_user)):
     return user.activities

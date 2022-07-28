@@ -1,4 +1,4 @@
-from app.models import Project, Activity
+from app.models import Project
 
 
 def test_generating_activities(user, db):

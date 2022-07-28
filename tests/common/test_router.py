@@ -8,8 +8,6 @@ from app import schemas
 from app.api.router import CrudRouter
 from app.models import Task
 
-from app.main import app
-
 
 class SomeClass:
     pass

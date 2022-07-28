@@ -1,7 +1,7 @@
 import pytest
 
-from app.models.user import User, ActivityJournal
 from app.api.exceptions import WrongLoginCredentials
+from app.models.user import ActivityJournal, User
 
 
 def test_create_user(db):
@@ -53,14 +53,14 @@ def test_verify_password(db, user):
 
 
 def test_activity_journal_is_created(db, mocker):
-    mocker.patch('app.managers.base.BaseManager.create')
+    mocker.patch("app.managers.base.BaseManager.create")
 
     try:
         User.manager(db).create(
             email="test@tttt.t",
             password="1234",
             first_name="Oleh",
-            last_name="Pykulytsky"
+            last_name="Pykulytsky",
         )
     except AttributeError:
         pass
@@ -70,10 +70,7 @@ def test_activity_journal_is_created(db, mocker):
 
 def test_activity_journal(db):
     user = User.manager(db).create(
-        email="test@tttt.t",
-        password="1234",
-        first_name="Oleh",
-        last_name="Pykulytsky"
+        email="test@tttt.t", password="1234", first_name="Oleh", last_name="Pykulytsky"
     )
 
     assert ActivityJournal.manager(db).exists(user_id=user.id)
