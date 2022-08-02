@@ -72,6 +72,15 @@ class Activity(Timestamped, BaseManagerMixin):
         if self.task:
             return self.task
 
+    # @hybrid_property
+    # def target_type(self):
+    #     if self.project:
+    #         return "project"
+    #     if self.task:
+    #         return "task"
+    #     if self.task:
+    #         return "task"
+
     @hybrid_property
     def summary(self) -> str | None:
         if self.target:

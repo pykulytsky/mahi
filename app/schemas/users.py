@@ -8,6 +8,8 @@ class UserBase(BaseModel):
     email: EmailStr | None = None
     first_name: str | None = None
     last_name: str | None = None
+    avatar: str | None = None
+    tasks_goal_per_day: int | None = None
 
 
 class UserCreate(UserBase):

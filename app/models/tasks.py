@@ -1,5 +1,6 @@
-from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String, event, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from app.db.types import Priority
 from app.managers.base import BaseManagerMixin
@@ -56,9 +57,21 @@ class Task(Timestamped, TasksManagerMixin):
     priority = Column(Priority, nullable=True)
 
     is_done = Column(Boolean, default=False)
+    done_at = Column(DateTime, nullable=True)
+
     tags = relationship("Tag", secondary="tagitem", back_populates="tasks")
 
     project_id = Column(Integer, ForeignKey("project.id"))
     project = relationship("Project", back_populates="tasks")
 
     related_activities = relationship("Activity", back_populates="task")
+
+
+@event.listens_for(Task.is_done, "set")
+def track_task_completion(target, value, oldvalue, initiator):
+    """Updates done_at field when task is beeing done. Is used to track productivity at dashboard."""
+    if value != oldvalue:
+        if value:
+            target.done_at = func.now()
+        else:
+            target.done_at = None

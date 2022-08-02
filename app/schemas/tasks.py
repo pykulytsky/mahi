@@ -23,7 +23,6 @@ class TaskUpdate(TaskBase):
 
 class TaskInDBBase(TaskBase):
     id: int | None = None
-    project_id: int
     is_done: bool
 
     class Config:
