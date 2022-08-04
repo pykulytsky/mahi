@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel
 
@@ -10,6 +10,8 @@ class TaskBase(BaseModel):
     deadline: date | None = None
     name: str | None = None
     priority: str | None = None
+    done_at: datetime | None = None
+    color: str | None = None
 
 
 class TaskCreate(TaskBase):
@@ -24,6 +26,8 @@ class TaskUpdate(TaskBase):
 class TaskInDBBase(TaskBase):
     id: int | None = None
     is_done: bool
+    created: datetime
+    updated: datetime
 
     class Config:
         orm_mode = True

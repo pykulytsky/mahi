@@ -23,6 +23,7 @@ class Project(Timestamped, TasksManagerMixin):
     icon = Column(String, nullable=True)
 
     sort_tasks_by = Column(String, default="is_done")
+    show_completed_tasks = Column(Boolean, default=True)
 
     tasks = relationship("Task", back_populates="project")
     related_activities = relationship("Activity", back_populates="project")
@@ -55,6 +56,7 @@ class Task(Timestamped, TasksManagerMixin):
     description = Column(String, unique=False, nullable=True)
     deadline = Column(Date, nullable=True)
     priority = Column(Priority, nullable=True)
+    color = Column(String, nullable=True)
 
     is_done = Column(Boolean, default=False)
     done_at = Column(DateTime, nullable=True)

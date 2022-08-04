@@ -10,7 +10,7 @@ class ProjectBase(BaseModel):
     accent_color: str | None = None
     is_favorite: bool | None = False
     is_pinned: bool | None = False
-    is_editable: bool | None = False
+    is_editable: bool | None = True
 
 
 class ProjectCreate(ProjectBase):
