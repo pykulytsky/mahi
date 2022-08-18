@@ -61,11 +61,12 @@ async def subscribe(pubsub: client.PubSub) -> None:
 async def general_chanel(
     user_token: str,
     db: Session = Depends(deps.get_db),
+    redis: Redis = Depends(depends_redis)
 ):
 
     user = deps.get_current_active_user(deps.get_current_user(db, user_token))
     try:
-        return EventSourceResponse(consume("general", str(user.id), user.last_login))
+        return EventSourceResponse(consume(redis, user, "general"))
     finally:
         User.manager(db).update(user.id, last_login=datetime.now())
 
@@ -74,11 +75,12 @@ async def general_chanel(
 async def personal_chanel(
     user_token: str,
     db: Session = Depends(deps.get_db),
+    redis: Redis = Depends(depends_redis)
 ):
 
     user = deps.get_current_active_user(deps.get_current_user(db, user_token))
 
-    return EventSourceResponse(consume(f"personal_{user.id}", str(user.id)))
+    return EventSourceResponse(consume(redis, user, f"personal_{user.id}"))
 
 
 @sse_router.get("/v2/general")

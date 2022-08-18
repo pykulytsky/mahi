@@ -1,12 +1,17 @@
 from datetime import datetime
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
+from fastapi_plugins import depends_redis
+from aioredis import Redis
 
 from app import schemas
 from app.api.deps import get_current_active_user, get_db
 from app.api.router import AuthenticatedCrudRouter
 from app.models import Project, Task, User
+
+from app.sse.tasks import remind
+
 
 router = AuthenticatedCrudRouter(
     model=Task,
@@ -16,6 +21,19 @@ router = AuthenticatedCrudRouter(
     prefix="/tasks",
     tags=["task"],
 )
+
+
+@router.post("/", response_model=schemas.Task)
+async def create_task(
+    task_in: schemas.TaskCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    instance = Task.manager(db).create(**dict(task_in))
+    if task_in.remind_at is not None:
+        background_tasks.add_task(remind, instance)
+    return instance
 
 
 @router.get("/date/{date}", response_model=list[schemas.Task])

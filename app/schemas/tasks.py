@@ -37,3 +37,14 @@ class TaskInDBBase(TaskBase):
 
 class Task(TaskInDBBase):
     tags: list[TagInDB] | None = None
+
+
+class TaskJSONSerializable(BaseModel):
+    id: int
+    name: str
+    project_id: int
+    is_important: bool
+    is_done: bool
+
+    class Config:
+        orm_mode = True
