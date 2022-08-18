@@ -12,11 +12,13 @@ class TaskBase(BaseModel):
     priority: str | None = None
     done_at: datetime | None = None
     color: str | None = None
+    is_important: bool | None = False
+    remind_at: datetime | None = None
 
 
 class TaskCreate(TaskBase):
     name: str
-    project_id: int
+    project_id: int | None = None
 
 
 class TaskUpdate(TaskBase):

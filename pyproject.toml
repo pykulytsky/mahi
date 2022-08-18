@@ -26,6 +26,10 @@ passlib = "^1.7.4"
 python-multipart = "^0.0.5"
 requests = "^2.28.1"
 SQLAlchemy-Utils = "^0.38.3"
+sse-starlette = "^1.1.6"
+aioredis = "^2.0.1"
+fastapi-plugins = "^0.10.0"
+aiokafka = "^0.7.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"

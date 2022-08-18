@@ -98,6 +98,9 @@ class Settings(BaseSettings):
 
     ALGORITHM: str = "HS256"
 
+    SSE_RETRY_TIMEOUT: int = 2000
+    SSE_STREAM_DELAY: int = 1
+
     class Config:
         env_file = "settings.ini"
         env_file_encoding = "utf-8"

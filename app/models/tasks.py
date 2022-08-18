@@ -1,4 +1,13 @@
-from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String, event, DateTime
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    event,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -56,7 +65,9 @@ class Task(Timestamped, TasksManagerMixin):
     description = Column(String, unique=False, nullable=True)
     deadline = Column(Date, nullable=True)
     priority = Column(Priority, nullable=True)
+    is_important = Column(Boolean, default=False)
     color = Column(String, nullable=True)
+    remind_at = Column(DateTime, nullable=True)
 
     is_done = Column(Boolean, default=False)
     done_at = Column(DateTime, nullable=True)
@@ -71,7 +82,7 @@ class Task(Timestamped, TasksManagerMixin):
 
 @event.listens_for(Task.is_done, "set")
 def track_task_completion(target, value, oldvalue, initiator):
-    """Updates done_at field when task is beeing done. Is used to track productivity at dashboard."""
+    """Updates done_at field when task is being done. Is used to track productivity at dashboard."""
     if value != oldvalue:
         if value:
             target.done_at = func.now()

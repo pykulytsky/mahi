@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
@@ -23,6 +23,7 @@ class User(Timestamped, UserManagerMixin):
     email_verified = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
+    last_login = Column(DateTime, nullable=True)
 
     projects = relationship("Project", back_populates="owner")
     tags = relationship("Tag", back_populates="owner")
@@ -85,3 +86,12 @@ class Activity(Timestamped, BaseManagerMixin):
     def summary(self) -> str | None:
         if self.target:
             return f"{self.actor} {self.action} {self.target}"
+
+
+class Message(Timestamped, BaseManagerMixin):
+    id = Column(Integer, primary_key=True, index=True)
+
+    published = Column(Boolean, default=False)
+    read = Column(Boolean, default=False)
+
+    channel = Column(String, nullable=True)

@@ -21,19 +21,27 @@ class TasksManager(BaseManager):
     def handle_activity(self, instance, action: str) -> user.Activity:
         actor = None
         if isinstance(instance, tasks.Task):
-            actor = instance.project.owner
+            if instance.project:
+                actor = instance.project.owner
         elif isinstance(instance, tasks.TagItem):
             actor = tasks.Tag.manager(self.db).get(id=instance.tag_id).owner
         else:
             actor = instance.owner
-
-        if not actor.journal:
+        try:
+            if not actor.journal:
+                user.ActivityJournal.manager(self.db).create(user=actor)
+        except AttributeError:
             user.ActivityJournal.manager(self.db).create(user=actor)
 
         target = {self.model.__name__.lower(): instance}
-        return user.Activity.manager(self.db).create(
-            journal=actor.journal, actor=actor, action=action, **target
-        )
+        try:
+            return user.Activity.manager(self.db).create(
+                journal=actor.journal, actor=actor, action=action, **target
+            )
+        except AttributeError:
+            return user.Activity.manager(self.db).create(
+                actor=actor, action=action, **target
+            )
 
 
 class TasksManagerMixin(BaseManagerMixin):
