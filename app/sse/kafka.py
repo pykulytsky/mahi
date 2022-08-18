@@ -1,8 +1,6 @@
-import logging
 import json
+import logging
 from collections import Counter
-
-from app.models import User
 
 from aiokafka import (
     AIOKafkaConsumer,
@@ -11,6 +9,8 @@ from aiokafka import (
     TopicPartition,
 )
 from aioredis import Redis
+
+from app.models import User
 
 logging.basicConfig(
     format="[%(asctime)-15s] [%(levelname)s]: %(message)s",
@@ -45,7 +45,7 @@ async def consume(
 
     tp = TopicPartition(topic, 0)
     consumer = AIOKafkaConsumer(
-        bootstrap_servers='localhost:9092',
+        bootstrap_servers="localhost:9092",
         enable_auto_commit=False,
     )
     await consumer.start()
@@ -57,8 +57,8 @@ async def consume(
     initial_counts = await redis.hgetall(REDIS_HASH_KEY)
     for key, state in initial_counts.items():
         state = json.loads(state)
-        offset = max([offset, state['offset']])
-        counts[key] = state['count']
+        offset = max([offset, state["offset"]])
+        counts[key] = state["count"]
 
     # Same as with manual commit, you need to fetch next message, so +1
     consumer.seek(tp, offset + 1)
@@ -66,19 +66,12 @@ async def consume(
         async for msg in consumer:
             yield {
                 "event": "new_message",
-                "data": {
-                    "topic": msg.topic,
-                    "key": msg.key,
-                    "value": msg.value
-                }
+                "data": {"topic": msg.topic, "key": msg.key, "value": msg.value},
             }
             try:
                 key = msg.key.decode("utf-8")
                 counts[key] += 1
-                value = json.dumps({
-                    "count": counts[key],
-                    "offset": msg.offset
-                })
+                value = json.dumps({"count": counts[key], "offset": msg.offset})
                 await redis.hset(REDIS_HASH_KEY, key, value)
             except:  # noqa
                 pass
@@ -115,9 +108,10 @@ async def consume_old(
         await consumer.commit()
 
 
-async def produce(message: bytes, topic: str = "default", key: bytes = b"default") -> None:
-    producer = AIOKafkaProducer(
-        bootstrap_servers='localhost:9092')
+async def produce(
+    message: bytes, topic: str = "default", key: bytes = b"default"
+) -> None:
+    producer = AIOKafkaProducer(bootstrap_servers="localhost:9092")
     # Get cluster layout and initial topic/partition leadership information
     await producer.start()
     try:

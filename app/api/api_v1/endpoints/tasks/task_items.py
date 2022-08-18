@@ -1,17 +1,13 @@
 from datetime import datetime
 
-from fastapi import Depends, HTTPException, BackgroundTasks
+from fastapi import BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
-from fastapi_plugins import depends_redis
-from aioredis import Redis
 
 from app import schemas
 from app.api.deps import get_current_active_user, get_db
 from app.api.router import AuthenticatedCrudRouter
 from app.models import Project, Task, User
-
 from app.sse.tasks import remind
-
 
 router = AuthenticatedCrudRouter(
     model=Task,

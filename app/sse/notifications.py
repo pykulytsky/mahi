@@ -61,7 +61,7 @@ async def subscribe(pubsub: client.PubSub) -> None:
 async def general_chanel(
     user_token: str,
     db: Session = Depends(deps.get_db),
-    redis: Redis = Depends(depends_redis)
+    redis: Redis = Depends(depends_redis),
 ):
 
     user = deps.get_current_active_user(deps.get_current_user(db, user_token))
@@ -75,7 +75,7 @@ async def general_chanel(
 async def personal_chanel(
     user_token: str,
     db: Session = Depends(deps.get_db),
-    redis: Redis = Depends(depends_redis)
+    redis: Redis = Depends(depends_redis),
 ):
 
     user = deps.get_current_active_user(deps.get_current_user(db, user_token))
@@ -180,7 +180,7 @@ async def delayed_message_v2(redis: Redis):
 
 
 @sse_router.get("/v2/test-general")
-async def test_general_chanel(
+async def test_general_chanel_v2(  # noqa
     background_tasks: BackgroundTasks, redis: Redis = Depends(depends_redis)
 ):
     background_tasks.add_task(delayed_message_v2, redis)
@@ -195,7 +195,7 @@ async def delayed_personal_message_v2(redis: Redis, user: User):
 
 
 @sse_router.get("/v2/test-personal")
-async def test_personal_chanel(
+async def test_personal_chanel_v2(  # noqa
     background_tasks: BackgroundTasks,
     user: User = Depends(get_current_active_user),
     redis: Redis = Depends(depends_redis),
