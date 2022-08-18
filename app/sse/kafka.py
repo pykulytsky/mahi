@@ -1,5 +1,6 @@
+import json
 import logging
-from datetime import datetime
+from collections import Counter
 
 from aiokafka import (
     AIOKafkaConsumer,
@@ -7,10 +8,13 @@ from aiokafka import (
     ConsumerRebalanceListener,
     TopicPartition,
 )
+from aioredis import Redis
+
+from app.models import User
 
 logging.basicConfig(
     format="[%(asctime)-15s] [%(levelname)s]: %(message)s",
-    level=logging.INFO,
+    level=logging.ERROR,
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
@@ -33,9 +37,51 @@ class RebalancerListener(ConsumerRebalanceListener):
 
 
 async def consume(
+    redis: Redis,
+    user: User,
+    topic: str = "default",
+):
+    REDIS_HASH_KEY = f"aggregated_count:{topic}:0:{user.id}"
+
+    tp = TopicPartition(topic, 0)
+    consumer = AIOKafkaConsumer(
+        bootstrap_servers="localhost:9092",
+        enable_auto_commit=False,
+    )
+    await consumer.start()
+    consumer.assign([tp])
+
+    # Load initial state of aggregation and last processed offset
+    offset = -1
+    counts = Counter()
+    initial_counts = await redis.hgetall(REDIS_HASH_KEY)
+    for key, state in initial_counts.items():
+        state = json.loads(state)
+        offset = max([offset, state["offset"]])
+        counts[key] = state["count"]
+
+    # Same as with manual commit, you need to fetch next message, so +1
+    consumer.seek(tp, offset + 1)
+    try:
+        async for msg in consumer:
+            yield {
+                "event": "new_message",
+                "data": {"topic": msg.topic, "key": msg.key, "value": msg.value},
+            }
+            try:
+                key = msg.key.decode("utf-8")
+                counts[key] += 1
+                value = json.dumps({"count": counts[key], "offset": msg.offset})
+                await redis.hset(REDIS_HASH_KEY, key, value)
+            except:  # noqa
+                pass
+    finally:
+        await consumer.stop()
+
+
+async def consume_old(
     topic: str = "default",
     group_id: str | None = None,
-    date_to_seek: datetime | None = None,
 ):
     consumer = AIOKafkaConsumer(
         topic,
@@ -62,11 +108,15 @@ async def consume(
         await consumer.commit()
 
 
-async def produce(message: bytes, topic: str = "default") -> None:
+async def produce(
+    message: bytes, topic: str = "default", key: bytes = b"default"
+) -> None:
     producer = AIOKafkaProducer(bootstrap_servers="localhost:9092")
+    # Get cluster layout and initial topic/partition leadership information
     await producer.start()
-
     try:
-        await producer.send_and_wait(topic=topic, value=message)
+        # Produce message
+        await producer.send_and_wait(topic, message, key)
     finally:
+        # Wait for all pending messages to be delivered or expire.
         await producer.stop()

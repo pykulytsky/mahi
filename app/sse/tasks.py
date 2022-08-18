@@ -1,19 +1,25 @@
 import asyncio
+import json
 from datetime import datetime
-
-from fastapi import Request
 
 from app import schemas
 from app.models import Task
 
+from .kafka import produce
 
-async def remind(request: Request, task: Task):
+
+async def remind(task: Task) -> None:
     delay = task.remind_at.timestamp() - datetime.now().timestamp()
     if delay > 1:
         await asyncio.sleep(delay)
 
-        await request.app.pubsub.subscribe(str(task.project.owner.id))
-        await request.app.redis.publish(
-            channel=str(task.project.owner.id),
-            message=str(dict(schemas.Task.from_orm(task))),
+        await produce(
+            message=json.dumps(
+                {
+                    "message_type": "remind",
+                    "task": schemas.TaskJSONSerializable.from_orm(task).dict(),
+                    "timestamp": datetime.now().timestamp(),
+                }
+            ).encode("utf-8"),
+            topic=f"personal_{task.project.owner.id}",
         )
