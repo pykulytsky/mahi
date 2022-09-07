@@ -28,14 +28,28 @@ class Project(Timestamped, TasksManagerMixin):
     is_favorite = Column(Boolean, default=False)
     is_pinned = Column(Boolean, default=False)
     is_editable = Column(Boolean, default=True)
+
     accent_color = Column(String, nullable=True)
     icon = Column(String, nullable=True)
+
+    sections = relationship("Section", back_populates="project")
 
     sort_tasks_by = Column(String, default="is_done")
     show_completed_tasks = Column(Boolean, default=True)
 
     tasks = relationship("Task", back_populates="project")
     related_activities = relationship("Activity", back_populates="project")
+
+
+class Section(Timestamped, TasksManagerMixin):
+    id = Column(Integer, primary_key=True, index=True)
+    order = Column(Integer, nullable=False)
+    name = Column(String, nullable=False)
+
+    project_id = Column(Integer, ForeignKey("project.id"))
+    project = relationship("Project", back_populates="sections")
+
+    tasks = relationship("Task", back_populates="section")
 
 
 class Tag(Timestamped, TasksManagerMixin):
@@ -57,6 +71,7 @@ class TagItem(Timestamped, BaseManagerMixin):
 
 class Task(Timestamped, TasksManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
+    order = Column(Integer, nullable=False)
 
     parent_task_id = Column(Integer, ForeignKey("task.id"))
     subtasks = relationship("Task")
@@ -76,6 +91,9 @@ class Task(Timestamped, TasksManagerMixin):
 
     project_id = Column(Integer, ForeignKey("project.id"))
     project = relationship("Project", back_populates="tasks")
+
+    section_id = Column(Integer, ForeignKey("section.id"))
+    section = relationship("Section", back_populates="tasks")
 
     related_activities = relationship("Activity", back_populates="task")
 

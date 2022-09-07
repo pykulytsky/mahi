@@ -32,6 +32,7 @@ class User(Timestamped, UserManagerMixin):
 
     journal = relationship("ActivityJournal", back_populates="user", uselist=False)
     activities = relationship("Activity", back_populates="actor")
+    messages = relationship("Message", back_populates="user")
 
     @hybrid_property
     def full_name(self) -> str:
@@ -95,3 +96,7 @@ class Message(Timestamped, BaseManagerMixin):
     read = Column(Boolean, default=False)
 
     channel = Column(String, nullable=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    user = relationship("User", back_populates="messages")
+
+    body = Column(String, nullable=False)

@@ -33,6 +33,10 @@ async def get_tasks_by_project(
     order_by: str = "created",
     desc: bool = False,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_active_user),
+    _: User = Depends(get_current_active_user),
 ):
-    return Task.manager(db).filter(skip, limit, order_by, desc, project_id=project_id)
+    project = Project.manager(db).get(id=project_id)
+    if project.show_completed_tasks:
+        return Task.manager(db).filter(skip, limit, order_by, desc, project_id=project_id)
+
+    return Task.manager(db).filter(skip, limit, order_by, desc, project_id=project_id, is_done=False)

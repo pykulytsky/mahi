@@ -14,20 +14,25 @@ class TaskBase(BaseModel):
     color: str | None = None
     is_important: bool | None = False
     remind_at: datetime | None = None
+    order: int | None = None
 
 
 class TaskCreate(TaskBase):
     name: str
     project_id: int | None = None
+    section_id: int | None = None
 
 
 class TaskUpdate(TaskBase):
     is_done: bool | None = True
+    project_id: int | None = None
+    section_id: int | None = None
 
 
 class TaskInDBBase(TaskBase):
     id: int | None = None
     is_done: bool
+    order: int
     created: datetime
     updated: datetime
 

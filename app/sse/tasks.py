@@ -1,5 +1,4 @@
 import asyncio
-import json
 from datetime import datetime
 
 from app import schemas
@@ -14,12 +13,10 @@ async def remind(task: Task) -> None:
         await asyncio.sleep(delay)
 
         await produce(
-            message=json.dumps(
-                {
-                    "message_type": "remind",
-                    "task": schemas.TaskJSONSerializable.from_orm(task).dict(),
-                    "timestamp": datetime.now().timestamp(),
-                }
-            ).encode("utf-8"),
+            message={
+                "message_type": "remind",
+                "task": schemas.TaskJSONSerializable.from_orm(task).dict(),
+                "timestamp": datetime.now().timestamp(),
+            },
             topic=f"personal_{task.project.owner.id}",
         )

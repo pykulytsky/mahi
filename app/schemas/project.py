@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 from .tasks import Task
+from .section import Section
 
 
 class ProjectBase(BaseModel):
@@ -11,6 +12,7 @@ class ProjectBase(BaseModel):
     is_favorite: bool | None = False
     is_pinned: bool | None = False
     is_editable: bool | None = True
+    show_completed_tasks: bool | None = True
 
 
 class ProjectCreate(ProjectBase):
@@ -32,3 +34,4 @@ class ProjectInDBBase(ProjectBase):
 class Project(ProjectInDBBase):
     owner_id: int
     tasks: list[Task]
+    sections: list[Section]

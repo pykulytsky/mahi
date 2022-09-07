@@ -145,7 +145,7 @@ async def personal_chanel_v2(
 async def delayed_message(redis: Redis):
     await asyncio.sleep(1)
     await produce(
-        message=f"General message {datetime.now()}".encode("utf-8"), topic="general"
+        message=f"General message {datetime.now()}", topic="general"
     )
 
 
@@ -160,7 +160,7 @@ async def test_general_chanel(
 async def delayed_personal_message(redis: Redis, user: User):
     await asyncio.sleep(1)
     await produce(
-        message=f"Personal message {datetime.now()}".encode("utf-8"),
+        message=f"Personal message {datetime.now()}",
         topic=f"personal_{user.id}",
     )
 

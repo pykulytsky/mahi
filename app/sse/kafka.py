@@ -36,6 +36,14 @@ class RebalancerListener(ConsumerRebalanceListener):
         pass
 
 
+def serializer(value):
+    return json.dumps(value).encode('utf-8')
+
+
+def deserializer(serialized):
+    return json.loads(serialized)
+
+
 async def consume(
     redis: Redis,
     user: User,
@@ -46,6 +54,7 @@ async def consume(
     tp = TopicPartition(topic, 0)
     consumer = AIOKafkaConsumer(
         bootstrap_servers="localhost:9092",
+        value_deserializer=deserializer,
         enable_auto_commit=False,
     )
     await consumer.start()
@@ -66,7 +75,7 @@ async def consume(
         async for msg in consumer:
             yield {
                 "event": "new_message",
-                "data": {"topic": msg.topic, "key": msg.key, "value": msg.value},
+                "data": {"topic": msg.topic, "value": msg.value},
             }
             try:
                 key = msg.key.decode("utf-8")
@@ -111,7 +120,10 @@ async def consume_old(
 async def produce(
     message: bytes, topic: str = "default", key: bytes = b"default"
 ) -> None:
-    producer = AIOKafkaProducer(bootstrap_servers="localhost:9092")
+    producer = AIOKafkaProducer(
+        bootstrap_servers="localhost:9092",
+        value_serializer=serializer
+    )
     # Get cluster layout and initial topic/partition leadership information
     await producer.start()
     try:
