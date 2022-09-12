@@ -40,8 +40,7 @@ def user(db):
         password="1234",
     )
     yield user
-    db.delete(user)
-    db.commit()
+    User.manager(db).delete(user)
 
 
 @pytest.fixture
@@ -58,8 +57,7 @@ def another_user(db):
         password="1234",
     )
     yield user
-    db.delete(user)
-    db.commit()
+    User.manager(db).delete(user)
 
 
 @pytest.fixture()

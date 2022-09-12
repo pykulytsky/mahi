@@ -5,24 +5,22 @@ from app.models import Project, Tag, TagItem, Task
 
 @pytest.fixture
 def project(db, user):
-    project = Project.manager(db).create(id=9999, name="Test proejct", owner=user)
+    project = Project.manager(db).create(name="Test proejct", owner=user)
     yield project
-    db.delete(project)
-    db.commit()
+    Project.manager(db).delete(project)
 
 
 @pytest.fixture
 def task(db, project):
-    task = Task.manager(db).create(id=9999, name="Test task", project=project)
+    task = Task.manager(db).create(name="Test task", project_id=project.id)
     yield task
-    db.delete(task)
-    db.commit()
+    Task.manager(db).delete(task)
 
 
 @pytest.fixture
 def tag(db, task, user):
-    tag = Tag.manager(db).create(id=9999, name="Test tag", color="primary", owner=user)
-    TagItem.manager(db).create(id=9999, tag_id=tag.id, task_id=task.id)
+    tag = Tag.manager(db).create(ame="Test tag", color="primary", owner=user)
+    tag_item = TagItem.manager(db).create(tag_id=tag.id, task_id=task.id)
     yield tag
-    db.delete(tag)
-    db.commit()
+    Tag.manager(db).delete(tag)
+    TagItem.manager(db).delete(tag_item)

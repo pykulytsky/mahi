@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
-from .tasks import Task
 from .section import Section
+from .tasks import Task
 
 
 class ProjectBase(BaseModel):

@@ -7,6 +7,7 @@ from app import schemas
 from app.api.deps import get_current_active_user, get_db
 from app.api.router import AuthenticatedCrudRouter
 from app.models import Project, Task, User
+from app.models.tasks import Section
 from app.sse.tasks import remind
 
 router = AuthenticatedCrudRouter(
@@ -59,3 +60,29 @@ async def move_task_to_proejct(
         return updated_task
     else:
         raise HTTPException(status_code=400, detail="Authentication error")
+
+
+@router.post("/{order}/reorder/", response_model=schemas.Project)
+async def reorder_tasks(
+    order: str | int,
+    reorder_schema: schemas.TaskReorder,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    if reorder_schema.source_type == "section":
+        instance = Task.manager(db).get(
+            section_id=reorder_schema.source_id, order=order
+        )
+    else:
+        instance = Task.manager(db).get(
+            project_id=reorder_schema.source_id, order=order
+        )
+
+    model = Section if reorder_schema.destination_type == "section" else Project
+    destination = model.manager(db).get(id=reorder_schema.destination_id)
+
+    Task.manager(db).reorder(instance, destination, reorder_schema.order)
+
+    return Project.manager(db).get(
+        id=destination.id if model == Project else destination.project_id
+    )

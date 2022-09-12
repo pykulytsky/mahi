@@ -4,7 +4,7 @@ from app.models import Task
 
 
 def test_task_update_done_at_when_tash_is_been_completed(db, project):
-    task = Task.manager(db).create(name="Test task", project=project)
+    task = Task.manager(db).create(name="Test task", project_id=project.id)
 
     assert task.done_at is None
 
@@ -17,7 +17,9 @@ def test_task_update_done_at_when_tash_is_been_completed(db, project):
 
 
 def test_uncomplete_task(db, project):
-    task = Task.manager(db).create(name="Test task", project=project, is_done=True)
+    task = Task.manager(db).create(
+        name="Test task", project_id=project.id, is_done=True
+    )
 
     assert task.done_at is not None
 

@@ -144,9 +144,7 @@ async def personal_chanel_v2(
 
 async def delayed_message(redis: Redis):
     await asyncio.sleep(1)
-    await produce(
-        message=f"General message {datetime.now()}", topic="general"
-    )
+    await produce(message=f"General message {datetime.now()}", topic="general")
 
 
 @sse_router.get("/test-general")

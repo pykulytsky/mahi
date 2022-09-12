@@ -3,19 +3,19 @@ from app.models import tasks, user
 from .base import BaseManager, BaseManagerMixin
 
 
-class TasksManager(BaseManager):
+class TasksBaseManager(BaseManager):
     def create(self, disable_check: bool = False, **fields):
         instance = super().create(disable_check, **fields)
-        self.handle_activity(instance, "created")
+        # self.handle_activity(instance, "created")
 
         return instance
 
     def delete(self, instance):
-        self.handle_activity(instance, "deleted")
+        # self.handle_activity(instance, "deleted")
         return super().delete(instance)
 
     def update(self, id, **updated_fields):
-        self.handle_activity(self.get(id=id), "updated")
+        # self.handle_activity(self.get(id=id), "updated")
         return super().update(id, **updated_fields)
 
     def handle_activity(self, instance, action: str) -> user.Activity:
@@ -42,6 +42,46 @@ class TasksManager(BaseManager):
             return user.Activity.manager(self.db).create(
                 actor=actor, action=action, **target
             )
+
+
+class TasksManager(TasksBaseManager):
+    def create(self, disable_check: bool = False, **fields):
+        model = tasks.Section if fields.get("section_id", False) else tasks.Project
+        id = (
+            fields["section_id"]
+            if fields.get("section_id", False)
+            else fields["project_id"]
+        )
+        fields["order"] = fields["order"] if fields.get("order", False) else 0
+        for task in model.manager(self.db).get(id=id).tasks:
+            if task.order >= fields["order"]:
+                tasks.Task.manager(self.db).update(task.id, order=task.order + 1)
+        return super().create(disable_check, **fields)
+
+    def delete(self, instance):
+        model = instance.section or instance.project
+        for task in model.tasks:
+            if task.order > instance.order:
+                tasks.Task.manager(self.db).update(task.id, order=task.order - 1)
+        return super().delete(instance)
+
+    def reorder(self, instance, destination, order: int):
+        fields = instance.__dict__.copy()
+        fields.pop("_sa_instance_state")
+        fields["project_id"], fields["section_id"] = None, None
+        if isinstance(destination, tasks.Section):
+            fields["section_id"] = destination.id
+        if isinstance(destination, tasks.Project):
+            fields["project_id"] = destination.id
+        fields["order"] = order
+        tasks.Task.manager(self.db).delete(instance)
+        return tasks.Task.manager(self.db).create(**fields)
+
+
+class TasksBaseManagerMixin(BaseManagerMixin):
+    @classmethod
+    def manager(cls, db):
+        return TasksBaseManager(cls, db)
 
 
 class TasksManagerMixin(BaseManagerMixin):

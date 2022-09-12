@@ -53,3 +53,11 @@ class TaskJSONSerializable(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class TaskReorder(BaseModel):
+    source_id: int
+    source_type: str
+    destination_id: int
+    destination_type: str
+    order: int

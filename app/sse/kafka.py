@@ -37,7 +37,7 @@ class RebalancerListener(ConsumerRebalanceListener):
 
 
 def serializer(value):
-    return json.dumps(value).encode('utf-8')
+    return json.dumps(value).encode("utf-8")
 
 
 def deserializer(serialized):
@@ -121,8 +121,7 @@ async def produce(
     message: bytes, topic: str = "default", key: bytes = b"default"
 ) -> None:
     producer = AIOKafkaProducer(
-        bootstrap_servers="localhost:9092",
-        value_serializer=serializer
+        bootstrap_servers="localhost:9092", value_serializer=serializer
     )
     # Get cluster layout and initial topic/partition leadership information
     await producer.start()

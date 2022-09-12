@@ -13,11 +13,11 @@ from sqlalchemy.sql import func
 
 from app.db.types import Priority
 from app.managers.base import BaseManagerMixin
-from app.managers.tasks import TasksManagerMixin
+from app.managers.tasks import TasksBaseManagerMixin, TasksManagerMixin
 from app.models.base import Timestamped
 
 
-class Project(Timestamped, TasksManagerMixin):
+class Project(Timestamped, TasksBaseManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=False, nullable=False)
     description = Column(String, unique=False, nullable=True)
@@ -32,16 +32,20 @@ class Project(Timestamped, TasksManagerMixin):
     accent_color = Column(String, nullable=True)
     icon = Column(String, nullable=True)
 
-    sections = relationship("Section", back_populates="project")
+    sections = relationship(
+        "Section", back_populates="project", order_by="app.models.tasks.Section.order"
+    )
 
     sort_tasks_by = Column(String, default="is_done")
     show_completed_tasks = Column(Boolean, default=True)
 
-    tasks = relationship("Task", back_populates="project")
+    tasks = relationship(
+        "Task", back_populates="project", order_by="app.models.tasks.Task.order"
+    )
     related_activities = relationship("Activity", back_populates="project")
 
 
-class Section(Timestamped, TasksManagerMixin):
+class Section(Timestamped, TasksBaseManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
     order = Column(Integer, nullable=False)
     name = Column(String, nullable=False)
@@ -49,10 +53,12 @@ class Section(Timestamped, TasksManagerMixin):
     project_id = Column(Integer, ForeignKey("project.id"))
     project = relationship("Project", back_populates="sections")
 
-    tasks = relationship("Task", back_populates="section")
+    tasks = relationship(
+        "Task", back_populates="section", order_by="app.models.tasks.Task.order"
+    )
 
 
-class Tag(Timestamped, TasksManagerMixin):
+class Tag(Timestamped, TasksBaseManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=False, nullable=False)
     color = Column(String, nullable=True)

@@ -37,6 +37,10 @@ async def get_tasks_by_project(
 ):
     project = Project.manager(db).get(id=project_id)
     if project.show_completed_tasks:
-        return Task.manager(db).filter(skip, limit, order_by, desc, project_id=project_id)
+        return Task.manager(db).filter(
+            skip, limit, order_by, desc, project_id=project_id
+        )
 
-    return Task.manager(db).filter(skip, limit, order_by, desc, project_id=project_id, is_done=False)
+    return Task.manager(db).filter(
+        skip, limit, order_by, desc, project_id=project_id, is_done=False
+    )
