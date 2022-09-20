@@ -78,6 +78,28 @@ class TasksManager(TasksBaseManager):
         return tasks.Task.manager(self.db).create(**fields)
 
 
+class SectionManager(TasksBaseManager):
+    def create(self, disable_check: bool = False, **fields):
+        fields["order"] = fields["order"] if fields.get("order", False) else 0
+        for section in tasks.Project.manager(self.db).get(id=fields["project_id"]).sections:
+            if section.order >= fields["order"]:
+                tasks.Section.manager(self.db).update(id=section.id, order=section.order + 1)
+        return super().create(disable_check, **fields)
+
+    def delete(self, instance):
+        for section in instance.project.sections:
+            if section.order > instance.order:
+                tasks.Section.manager(self.db).update(id=section.id, order=section.order - 1)
+        return super().delete(instance)
+
+    def reorder(self, instance, destination, order: int):
+        fields = instance.__dict__.copy()
+        fields.pop("_sa_instance_state")
+        fields["order"] = order
+        tasks.Section.manager(self.db).delete(instance)
+        return tasks.Section.manager(self.db).create(**fields)
+
+
 class TasksBaseManagerMixin(BaseManagerMixin):
     @classmethod
     def manager(cls, db):
@@ -88,3 +110,9 @@ class TasksManagerMixin(BaseManagerMixin):
     @classmethod
     def manager(cls, db):
         return TasksManager(cls, db)
+
+
+class SectionsManagerMixin(BaseManagerMixin):
+    @classmethod
+    def manager(cls, db):
+        return SectionManager(cls, db)

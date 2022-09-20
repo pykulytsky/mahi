@@ -9,6 +9,7 @@ class SectionBase(BaseModel):
     name: str | None = None
     order: int | None = None
     project_id: int | None = None
+    is_collapsed: bool | None = False
 
 
 class SectionCreate(SectionBase):

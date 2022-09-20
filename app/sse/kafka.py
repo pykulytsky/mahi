@@ -43,7 +43,6 @@ def serializer(value):
 def deserializer(serialized):
     return json.loads(serialized)
 
-
 async def consume(
     redis: Redis,
     user: User,

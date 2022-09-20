@@ -13,7 +13,7 @@ from sqlalchemy.sql import func
 
 from app.db.types import Priority
 from app.managers.base import BaseManagerMixin
-from app.managers.tasks import TasksBaseManagerMixin, TasksManagerMixin
+from app.managers.tasks import TasksBaseManagerMixin, TasksManagerMixin, SectionsManagerMixin
 from app.models.base import Timestamped
 
 
@@ -40,12 +40,12 @@ class Project(Timestamped, TasksBaseManagerMixin):
     show_completed_tasks = Column(Boolean, default=True)
 
     tasks = relationship(
-        "Task", back_populates="project", order_by="app.models.tasks.Task.order"
+        "Task", back_populates="project", order_by="app.models.tasks.Task.is_done, app.models.tasks.Task.order"
     )
     related_activities = relationship("Activity", back_populates="project")
 
 
-class Section(Timestamped, TasksBaseManagerMixin):
+class Section(Timestamped, SectionsManagerMixin):
     id = Column(Integer, primary_key=True, index=True)
     order = Column(Integer, nullable=False)
     name = Column(String, nullable=False)
@@ -53,8 +53,10 @@ class Section(Timestamped, TasksBaseManagerMixin):
     project_id = Column(Integer, ForeignKey("project.id"))
     project = relationship("Project", back_populates="sections")
 
+    is_collapsed = Column(Boolean, default=False)
+
     tasks = relationship(
-        "Task", back_populates="section", order_by="app.models.tasks.Task.order"
+        "Task", back_populates="section", order_by="app.models.tasks.Task.is_done, app.models.tasks.Task.order"
     )
 
 
