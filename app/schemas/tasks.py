@@ -40,6 +40,15 @@ class TaskInDBBase(TaskBase):
         orm_mode = True
 
 
+class TaskPreview(BaseModel):
+    id: int
+    is_done: int
+    order: int
+
+    class Config:
+        orm_mode = True
+
+
 class Task(TaskInDBBase):
     tags: list[TagInDB] | None = None
 

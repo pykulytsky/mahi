@@ -29,6 +29,8 @@ class Project(Timestamped, TasksBaseManagerMixin):
     is_pinned = Column(Boolean, default=False)
     is_editable = Column(Boolean, default=True)
 
+    deadline = Column(Date, nullable=True)
+
     accent_color = Column(String, nullable=True)
     icon = Column(String, nullable=True)
 
