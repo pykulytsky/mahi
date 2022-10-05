@@ -1,5 +1,4 @@
 from app.models import tasks, user
-
 from .base import BaseManager, BaseManagerMixin
 
 
@@ -65,17 +64,45 @@ class TasksManager(TasksBaseManager):
                 tasks.Task.manager(self.db).update(task.id, order=task.order - 1)
         return super().delete(instance)
 
-    def reorder(self, instance, destination, order: int):
-        fields = instance.__dict__.copy()
-        fields.pop("_sa_instance_state")
-        fields["project_id"], fields["section_id"] = None, None
-        if isinstance(destination, tasks.Section):
-            fields["section_id"] = destination.id
-        if isinstance(destination, tasks.Project):
-            fields["project_id"] = destination.id
-        fields["order"] = order
-        tasks.Task.manager(self.db).delete(instance)
-        return tasks.Task.manager(self.db).create(**fields)
+    def reorder_source(
+        self,
+        instance,
+    ):
+        source = instance.section or instance.project
+        for task in source.tasks:
+            if task.order > instance.order:
+                tasks.Task.manager(self.db).update(
+                    task.id,
+                    order=task.order - 1
+                )
+
+    def reorder_destination(
+        self,
+        order: int,
+        source
+    ):
+        for task in source.tasks:
+            if task.order >= order:
+                tasks.Task.manager(self.db).update(
+                    task.id,
+                    order=task.order + 1
+                )
+
+    def reorder(
+        self,
+        instance,
+        destination,
+        order: int
+    ):
+        self.reorder_source(instance)
+        self.reorder_destination(order, destination)
+        project_id, section_id = (destination.id, None) if isinstance(destination, tasks.Project) else (None, destination.id)
+        return tasks.Task.manager(self.db).update(
+            id=instance.id,
+            order=order,
+            project_id=project_id,
+            section_id=section_id,
+        )
 
 
 class SectionManager(TasksBaseManager):

@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 import aioredis
 from fastapi import FastAPI, Request
@@ -72,3 +73,12 @@ async def message_stream(request: Request):
             await asyncio.sleep(STREAM_DELAY)
 
     return EventSourceResponse(event_generator())
+
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response

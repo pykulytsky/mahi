@@ -51,6 +51,8 @@ class TaskPreview(BaseModel):
 
 class Task(TaskInDBBase):
     tags: list[TagInDB] | None = None
+    project_id: int | None = None
+    section_id: int | None = None
 
 
 class TaskJSONSerializable(BaseModel):
