@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import BackgroundTasks, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import schemas
 from app.api.deps import get_current_active_user, get_db
@@ -24,7 +24,7 @@ router = AuthenticatedCrudRouter(
 async def create_task(
     task_in: schemas.TaskCreate,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_active_user),
 ):
     instance = Task.manager(db).create(**dict(task_in))
@@ -36,14 +36,14 @@ async def create_task(
 @router.get("/date/{date}", response_model=list[schemas.Task])
 async def get_tasks_by_date(
     date: str,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_active_user),
 ):
     raw_date = datetime.strptime(date, "%Y-%m-%d")
-    owned_projects = Project.manager(db).filter(owner=user)
+    owned_projects = await Project.manager(db).filter(owner=user)
     tasks = []
     for project in owned_projects:
-        tasks += Task.manager(db).filter(deadline=raw_date, project=project)
+        tasks += await Task.manager(db).filter(deadline=raw_date, project=project)
     return tasks
 
 
@@ -51,12 +51,12 @@ async def get_tasks_by_date(
 async def move_task_to_proejct(
     id: int,
     project_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_active_user),
 ):
-    task = Task.manager(db).get(id=id)
+    task = await Task.manager(db).get(id=id)
     if task.project.owner == user:
-        updated_task = Task.manager(db).update(id=task.id, project_id=project_id)
+        updated_task = await Task.manager(db).update(id=task.id, project_id=project_id)
         return updated_task
     else:
         raise HTTPException(status_code=400, detail="Authentication error")
@@ -66,18 +66,18 @@ async def move_task_to_proejct(
 async def reorder_tasks(
     order: str | int,
     reorder_schema: schemas.TaskReorder,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_active_user),
 ):
 
     project_id, section_id = (reorder_schema.source_id, None) if reorder_schema.source_type == "project" else (None, reorder_schema.source_id)
-    instance = Task.manager(db).get(
+    instance = await Task.manager(db).get(
         section_id=section_id,
         project_id=project_id,
         order=order
     )
 
     model = Section if reorder_schema.destination_type == "section" else Project
-    destination = model.manager(db).get(id=reorder_schema.destination_id)
+    destination = await model.manager(db).get(id=reorder_schema.destination_id)
 
-    return Task.manager(db).reorder(instance, destination, reorder_schema.order)
+    return await Task.manager(db).reorder(instance, destination, reorder_schema.order)

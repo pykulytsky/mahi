@@ -1,5 +1,5 @@
 from fastapi import Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import schemas
 from app.api.deps import get_current_active_user, get_db
@@ -19,10 +19,10 @@ router = AuthenticatedCrudRouter(
 
 @router.get("/user/", response_model=list[schemas.Project])
 async def get_user_projects(
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_active_user),
 ):
-    return Project.manager(db).filter(owner=user)
+    return await Project.manager(db).filter(owner=user)
 
 
 @router.get("/{project_id}/tasks", response_model=list[schemas.Task])
@@ -32,15 +32,15 @@ async def get_tasks_by_project(
     limit: int = 100,
     order_by: str = "created",
     desc: bool = False,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_active_user),
 ):
-    project = Project.manager(db).get(id=project_id)
+    project = await Project.manager(db).get(id=project_id)
     if project.show_completed_tasks:
-        return Task.manager(db).filter(
+        return await Task.manager(db).filter(
             skip, limit, order_by, desc, project_id=project_id
         )
 
-    return Task.manager(db).filter(
+    return await Task.manager(db).filter(
         skip, limit, order_by, desc, project_id=project_id, is_done=False
     )

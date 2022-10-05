@@ -12,11 +12,11 @@ from app.managers.base import BaseManager, BaseManagerMixin
 
 
 class UserManager(BaseManager):
-    def create(self, **fields):
+    async def create(self, **fields):
         self.check_fields(**fields)
         fields["password"] = self.set_password(fields["password"])
 
-        instance = super().create(disable_check=True, **fields)
+        instance = await super().create(disable_check=True, **fields)
 
         self.refresh(instance)
 
@@ -36,9 +36,9 @@ class UserManager(BaseManager):
     def _hasher():
         return pbkdf2_sha256.using(salt=bytes(settings.SECRET_KEY.encode("utf-8")))
 
-    def authenticate(self, email: str, password: str):
+    async def authenticate(self, email: str, password: str):
         try:
-            user = self.get(email=email)
+            user = await self.get(email=email)
 
             if self.verify_password(password, user):
                 return user

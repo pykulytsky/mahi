@@ -5,7 +5,7 @@ from fastapi.datastructures import Default, DefaultPlaceholder
 from fastapi.encoders import DictIntStrAny, SetIntStr
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse, Response
 from starlette.routing import BaseRoute
 
@@ -27,7 +27,7 @@ class BaseCrudRouter(APIRouter):
         get_schema: BaseModel,
         create_schema: BaseModel,
         update_schema: BaseModel = None,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         prefix: Optional[str] = None,
         tags: Optional[List] = list(),
         *args,
@@ -182,7 +182,7 @@ class CrudRouter(BaseCrudRouter):
         get_schema: BaseModel,
         create_schema: BaseModel,
         update_schema: BaseModel = None,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         prefix: Optional[str] = None,
         tags: Optional[List] = [],
         add_create_route: bool = True,
@@ -262,29 +262,29 @@ class CrudRouter(BaseCrudRouter):
         limit: int = 100,
         order_by: str = "created",
         desc: bool = False,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
     ) -> Callable:
         @self.get("/", response_model=List[self.get_schema])
         async def _get_all(
-            skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+            skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)
         ):
 
-            return self.model.manager(db).all(skip, limit, order_by, desc)
+            return await self.model.manager(db).all(skip, limit, order_by, desc)
 
         return await _get_all(skip, limit, db)
 
     def _create(self) -> Callable:
         async def route(
-            instance_create_schema: self.create_schema, db: Session = Depends(get_db)
+            instance_create_schema: self.create_schema, db: AsyncSession = Depends(get_db)
         ):
             return self.model.manager(db).create(**dict(instance_create_schema))
 
         return route
 
     def _get(self) -> Callable:
-        async def route(id: int, db: Session = Depends(get_db)):
+        async def route(id: int, db: AsyncSession = Depends(get_db)):
             try:
-                return self.model.manager(db).get(id=id)
+                return await self.model.manager(db).get(id=id)
             except ObjectDoesNotExists:
                 raise HTTPException(
                     status_code=400, detail=f"{self.model.__name__} does not exists"
@@ -294,16 +294,16 @@ class CrudRouter(BaseCrudRouter):
 
     def _update(self) -> Callable:
         async def route(
-            id, update_schema: self.update_schema, db: Session = Depends(get_db)
+            id, update_schema: self.update_schema, db: AsyncSession = Depends(get_db)
         ):
-            return self.model.manager(db).update(
+            return await self.model.manager(db).update(
                 id, **update_schema.dict(exclude_unset=True)
             )
 
         return route
 
     def _delete(self) -> Callable:
-        async def route(id, db: Session = Depends(get_db)):
+        async def route(id, db: AsyncSession = Depends(get_db)):
             return self.model.manager(db).delete(self.model.manager(db).get(id=id))
 
         return route
@@ -318,7 +318,7 @@ class AuthenticatedCrudRouter(CrudRouter):
         get_schema: BaseModel,
         create_schema: BaseModel,
         update_schema: BaseModel = None,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         prefix: Optional[str] = None,
         tags: Optional[List] = [],
         add_create_route: bool = False,
@@ -353,7 +353,7 @@ class AuthenticatedCrudRouter(CrudRouter):
     def _create(self) -> Callable:
         async def route(
             instance_create_schema: self.create_schema,
-            db: Session = Depends(get_db),
+            db: AsyncSession = Depends(get_db),
             user: models.User = Depends(get_current_active_user),
         ):
             if self.owner_field_is_required:

@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 
 from app import schemas
@@ -20,9 +20,9 @@ router = AuthenticatedCrudRouter(
 @router.post("/remove", response_model=schemas.Task)
 async def remove_tag(
     tag_data: schemas.TagItemCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_active_user)
 ):
-    tag_item = TagItem.manager(db).get(**tag_data.dict())
+    tag_item = await TagItem.manager(db).get(**tag_data.dict())
     TagItem.manager(db).delete(tag_item)
-    return Task.manager(db).get(id=tag_data.task_id)
+    return await Task.manager(db).get(id=tag_data.task_id)

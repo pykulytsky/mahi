@@ -13,17 +13,17 @@ class TasksBaseManager(BaseManager):
         # self.handle_activity(instance, "deleted")
         return super().delete(instance)
 
-    def update(self, id, **updated_fields):
+    async def update(self, id, **updated_fields):
         # self.handle_activity(self.get(id=id), "updated")
-        return super().update(id, **updated_fields)
+        return await super().update(id, **updated_fields)
 
-    def handle_activity(self, instance, action: str) -> user.Activity:
+    async def handle_activity(self, instance, action: str) -> user.Activity:
         actor = None
         if isinstance(instance, tasks.Task):
             if instance.project:
                 actor = instance.project.owner
         elif isinstance(instance, tasks.TagItem):
-            actor = tasks.Tag.manager(self.db).get(id=instance.tag_id).owner
+            actor = await tasks.Tag.manager(self.db).get(id=instance.tag_id).owner
         else:
             actor = instance.owner
         try:
@@ -44,7 +44,7 @@ class TasksBaseManager(BaseManager):
 
 
 class TasksManager(TasksBaseManager):
-    def create(self, disable_check: bool = False, **fields):
+    async def create(self, disable_check: bool = False, **fields):
         model = tasks.Section if fields.get("section_id", False) else tasks.Project
         id = (
             fields["section_id"]
@@ -52,52 +52,52 @@ class TasksManager(TasksBaseManager):
             else fields["project_id"]
         )
         fields["order"] = fields["order"] if fields.get("order", False) else 0
-        for task in model.manager(self.db).get(id=id).tasks:
+        for task in await model.manager(self.db).get(id=id).tasks:
             if task.order >= fields["order"]:
-                tasks.Task.manager(self.db).update(task.id, order=task.order + 1)
-        return super().create(disable_check, **fields)
+                await tasks.Task.manager(self.db).update(task.id, order=task.order + 1)
+        return await super().create(disable_check, **fields)
 
-    def delete(self, instance):
+    async def delete(self, instance):
         model = instance.section or instance.project
         for task in model.tasks:
             if task.order > instance.order:
-                tasks.Task.manager(self.db).update(task.id, order=task.order - 1)
+                await tasks.Task.manager(self.db).update(task.id, order=task.order - 1)
         return super().delete(instance)
 
-    def reorder_source(
+    async def reorder_source(
         self,
         instance,
     ):
         source = instance.section or instance.project
         for task in source.tasks:
             if task.order > instance.order:
-                tasks.Task.manager(self.db).update(
+                await tasks.Task.manager(self.db).update(
                     task.id,
                     order=task.order - 1
                 )
 
-    def reorder_destination(
+    async def reorder_destination(
         self,
         order: int,
         source
     ):
         for task in source.tasks:
             if task.order >= order:
-                tasks.Task.manager(self.db).update(
+                await tasks.Task.manager(self.db).update(
                     task.id,
                     order=task.order + 1
                 )
 
-    def reorder(
+    async def reorder(
         self,
         instance,
         destination,
         order: int
     ):
-        self.reorder_source(instance)
-        self.reorder_destination(order, destination)
+        await self.reorder_source(instance)
+        await self.reorder_destination(order, destination)
         project_id, section_id = (destination.id, None) if isinstance(destination, tasks.Project) else (None, destination.id)
-        return tasks.Task.manager(self.db).update(
+        return await tasks.Task.manager(self.db).update(
             id=instance.id,
             order=order,
             project_id=project_id,
@@ -106,24 +106,24 @@ class TasksManager(TasksBaseManager):
 
 
 class SectionManager(TasksBaseManager):
-    def create(self, disable_check: bool = False, **fields):
+    async def create(self, disable_check: bool = False, **fields):
         fields["order"] = fields["order"] if fields.get("order", False) else 0
-        for section in tasks.Project.manager(self.db).get(id=fields["project_id"]).sections:
+        for section in await tasks.Project.manager(self.db).get(id=fields["project_id"]).sections:
             if section.order >= fields["order"]:
-                tasks.Section.manager(self.db).update(id=section.id, order=section.order + 1)
+                await tasks.Section.manager(self.db).update(id=section.id, order=section.order + 1)
         return super().create(disable_check, **fields)
 
-    def delete(self, instance):
+    async def delete(self, instance):
         for section in instance.project.sections:
             if section.order > instance.order:
-                tasks.Section.manager(self.db).update(id=section.id, order=section.order - 1)
+                await tasks.Section.manager(self.db).update(id=section.id, order=section.order - 1)
         return super().delete(instance)
 
-    def reorder(self, instance, destination, order: int):
+    async def reorder(self, instance, destination, order: int):
         fields = instance.__dict__.copy()
         fields.pop("_sa_instance_state")
         fields["order"] = order
-        tasks.Section.manager(self.db).delete(instance)
+        await self.delete(instance)
         return tasks.Section.manager(self.db).create(**fields)
 
 

@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import schemas
 from app.api import deps
@@ -14,14 +14,14 @@ router = APIRouter(tags=["auth"])
 
 
 @router.post("/access-token", response_model=schemas.Token)
-def get_access_token(
-    db: Session = Depends(deps.get_db), form_data: OAuth2PasswordRequestForm = Depends()
+async def get_access_token(
+    db: AsyncSession = Depends(deps.get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ):
     """
     OAuth2 compatible token login, get an access token for future requests
     """
     try:
-        user = User.manager(db).authenticate(
+        user = await User.manager(db).authenticate(
             email=form_data.username, password=form_data.password
         )
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)

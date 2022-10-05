@@ -1,28 +1,29 @@
-from typing import List, Type, Union
+from typing import List, Type
 
 from sqlalchemy import MetaData
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExists
 from app.db.base_class import Base
 
 
 class BaseManager:
-    def __init__(self, klass: Type, db: Session) -> None:
+    def __init__(self, klass: Type, db: AsyncSession) -> None:
         if not issubclass(klass, Base):
             raise ImproperlyConfigured(f"Type {klass.__name__} is not suported.")
-        self.model = klass
 
+        self.model = klass
         self.db = db
 
-    def create(self, disable_check: bool = False, **fields):
+    async def create(self, disable_check: bool = False, **fields):
         if not disable_check:
             self.check_fields(**fields)
         instance = self.model(**fields)
 
         self.db.add(instance)
         self.db.commit()
-        self.db.refresh(instance)
+        await self.db.refresh(instance)
 
         return instance
 
@@ -32,38 +33,43 @@ class BaseManager:
         self.db.delete(instance)
         self.db.commit()
 
-    def all(
+    async def all(
         self,
         skip: int = 0,
         limit: int = 100,
         order_by: str = "created",
         desc: bool = False,
-    ) -> List[Type]:
+    ):
         try:
             if desc:
-                return (
-                    self.db.query(self.model)
+                result = await self.db.execute(
+                    select(self.model)
                     .order_by(getattr(self.model, order_by).desc())
                     .offset(skip)
                     .limit(limit)
-                    .all()
                 )
-            return (
-                self.db.query(self.model)
+
+                return result.scalars().all()
+
+            result = await self.db.execute(
+                select(self.model)
                 .order_by(getattr(self.model, order_by))
                 .offset(skip)
                 .limit(limit)
-                .all()
             )
-        except AttributeError:
-            return self.db.query(self.model).offset(skip).limit(limit).all()
 
-    def get(self, **fields) -> Type:
+            return result.scalars().all()
+        except AttributeError:
+            result = await self.db.execute(select(self.model).offset(skip).limit(limit))
+            return result.scalars().all()
+
+    async def get(self, **fields) -> Type:
         self.check_fields(**fields)
 
         expression = [getattr(self.model, k) == fields[k] for k in fields.keys()]
 
-        instance = self.db.query(self.model).filter(*expression).first()
+        result = await self.db.execute(select(self.model).filter(*expression))
+        instance = result.scalars().first()
         if instance:
             return instance
 
@@ -71,9 +77,9 @@ class BaseManager:
             f"No {self.model.__name__.lower()} with such parameters."
         )
 
-    def update(self, id, **updated_fields):
+    async def update(self, id, **updated_fields):
         self.check_fields(**updated_fields)
-        instance = self.get(id=id)
+        instance = await self.get(id=id)
 
         for field in updated_fields:
             setattr(instance, field, updated_fields[field])
@@ -83,7 +89,7 @@ class BaseManager:
 
         return instance
 
-    def filter(
+    async def filter(
         self,
         skip: int = 0,
         limit: int = 100,
@@ -96,43 +102,47 @@ class BaseManager:
         expression = [getattr(self.model, k) == fields[k] for k in fields.keys()]
         try:
             if desc:
-                return (
-                    self.db.query(self.model)
+                result = await self.db.execute(
+                    select(self.model)
                     .order_by(
                         getattr(self.model, order_by).desc(), self.model.updated.desc()
                     )
                     .filter(*expression)
                     .offset(skip)
                     .limit(limit)
-                    .all()
                 )
-            return (
-                self.db.query(self.model)
+
+                return result.scalars.all()
+
+            result = await self.db.execute(
+                select(self.model)
                 .order_by(getattr(self.model, order_by), self.model.updated.desc())
                 .filter(*expression)
                 .offset(skip)
                 .limit(limit)
-                .all()
             )
+
+            return result.scalars.all()
         except AttributeError:
-            return (
-                self.db.query(self.model)
+            result = await self.db.execute(
+                select(self.model)
                 .filter(*expression)
                 .offset(skip)
                 .limit(limit)
-                .all()
             )
 
-    def get_or_false(self, **fields) -> Union[Type, bool]:
+            return result.scalars().all()
+
+    async def get_or_false(self, **fields):
         try:
-            instance = self.get(**fields)
+            instance = await self.get(**fields)
             return instance
         except ObjectDoesNotExists:
             return False
 
-    def exists(self, **fields):
+    async def exists(self, **fields):
         try:
-            self.get(**fields)
+            await self.get(**fields)
             return True
         except ObjectDoesNotExists:
             return False
@@ -156,9 +166,9 @@ class BaseManager:
                     f"Field {field} is not suported, suported fields: {self._get_model_fields()}"
                 )  # noqa
 
-    def refresh(self, instance):
+    async def refresh(self, instance):
         self.db.commit()
-        self.db.refresh(instance)
+        await self.db.refresh(instance)
 
         return instance
 

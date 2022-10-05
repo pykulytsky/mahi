@@ -1,5 +1,5 @@
 from fastapi import Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import schemas
 from app.api.deps import get_current_active_user, get_db
@@ -19,6 +19,6 @@ router = AuthenticatedCrudRouter(
 
 @router.get("/user/", response_model=list[schemas.Tag])
 async def get_user_tags(
-    db: Session = Depends(get_db), user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db), user: User = Depends(get_current_active_user)
 ):
-    return Tag.manager(db).filter(owner_id=user.id)
+    return await Tag.manager(db).filter(owner_id=user.id)

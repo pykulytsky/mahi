@@ -65,28 +65,28 @@ class Activity(Timestamped, BaseManagerMixin):
     tag_id = Column(Integer, ForeignKey("tag.id"))
     tag = relationship("Tag", back_populates="related_activities")
 
-    @hybrid_property
-    def target(self):
-        if self.project:
-            return self.project
-        if self.tag:
-            return self.tag
-        if self.task:
-            return self.task
+    # @hybrid_property
+    # def target(self):
+    #     if self.project:
+    #         return self.project
+    #     if self.tag:
+    #         return self.tag
+    #     if self.task:
+    #         return self.task
+
+    # # @hybrid_property
+    # # def target_type(self):
+    # #     if self.project:
+    # #         return "project"
+    # #     if self.task:
+    # #         return "task"
+    # #     if self.task:
+    # #         return "task"
 
     # @hybrid_property
-    # def target_type(self):
-    #     if self.project:
-    #         return "project"
-    #     if self.task:
-    #         return "task"
-    #     if self.task:
-    #         return "task"
-
-    @hybrid_property
-    def summary(self) -> str | None:
-        if self.target:
-            return f"{self.actor} {self.action} {self.target}"
+    # def summary(self) -> str | None:
+    #     if self.target:
+    #         return f"{self.actor} {self.action} {self.target}"
 
 
 class Message(Timestamped, BaseManagerMixin):
