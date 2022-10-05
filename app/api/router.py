@@ -12,6 +12,7 @@ from starlette.routing import BaseRoute
 from app import models
 from app.api.deps import get_current_active_user, get_db
 from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExists
+from fastapi_async_sqlalchemy import db as mdb
 
 
 class BaseCrudRouter(APIRouter):
@@ -268,8 +269,7 @@ class CrudRouter(BaseCrudRouter):
         async def _get_all(
             skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)
         ):
-
-            return await self.model.manager(db).all(skip, limit, order_by, desc)
+            return await self.model.manager(mdb.session).all(skip, limit, order_by, desc)
 
         return await _get_all(skip, limit, db)
 
@@ -277,14 +277,14 @@ class CrudRouter(BaseCrudRouter):
         async def route(
             instance_create_schema: self.create_schema, db: AsyncSession = Depends(get_db)
         ):
-            return self.model.manager(db).create(**dict(instance_create_schema))
+            return await self.model.manager(mdb.session).create(**dict(instance_create_schema))
 
         return route
 
     def _get(self) -> Callable:
         async def route(id: int, db: AsyncSession = Depends(get_db)):
             try:
-                return await self.model.manager(db).get(id=id)
+                return await self.model.manager(mdb).get(id=id)
             except ObjectDoesNotExists:
                 raise HTTPException(
                     status_code=400, detail=f"{self.model.__name__} does not exists"
@@ -296,7 +296,7 @@ class CrudRouter(BaseCrudRouter):
         async def route(
             id, update_schema: self.update_schema, db: AsyncSession = Depends(get_db)
         ):
-            return await self.model.manager(db).update(
+            return await self.model.manager(mdb).update(
                 id, **update_schema.dict(exclude_unset=True)
             )
 
@@ -304,7 +304,7 @@ class CrudRouter(BaseCrudRouter):
 
     def _delete(self) -> Callable:
         async def route(id, db: AsyncSession = Depends(get_db)):
-            return self.model.manager(db).delete(self.model.manager(db).get(id=id))
+            return await self.model.manager(mdb.session).delete(await self.model.manager(mdb.session).get(id=id))
 
         return route
 
@@ -357,10 +357,10 @@ class AuthenticatedCrudRouter(CrudRouter):
             user: models.User = Depends(get_current_active_user),
         ):
             if self.owner_field_is_required:
-                return self.model.manager(db).create(
+                return await self.model.manager(db).create(
                     **dict(instance_create_schema), owner=user
                 )
-            return self.model.manager(db).create(
+            return await self.model.manager(db).create(
                 **dict(instance_create_schema),
             )
 

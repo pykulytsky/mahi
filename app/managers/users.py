@@ -20,7 +20,7 @@ class UserManager(BaseManager):
 
         self.refresh(instance)
 
-        self.create_activity_journal(user=instance)
+        await self.create_activity_journal(user=instance)
 
         return instance
 
@@ -62,13 +62,13 @@ class UserManager(BaseManager):
         )
         return encoded_jwt
 
-    def create_activity_journal(self, user):
-        return models.ActivityJournal.manager(self.db).create(user=user)
+    async def create_activity_journal(self, user):
+        return await models.ActivityJournal.manager(self.db).create(user=user)
 
-    def delete(self, instance):
+    async def delete(self, instance):
         try:
-            models.ActivityJournal.manager(self.db).delete(
-                models.ActivityJournal.manager(self.db).get(user_id=instance.id)
+            await models.ActivityJournal.manager(self.db).delete(
+                await models.ActivityJournal.manager(self.db).get(user_id=instance.id)
             )
         except ObjectDoesNotExists:
             pass

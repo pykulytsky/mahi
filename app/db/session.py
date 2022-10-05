@@ -11,5 +11,5 @@ SessionLocal = sessionmaker(
     autoflush=False,
     bind=engine,
     class_=AsyncSession,
-    expire_on_commit=True
+    expire_on_commit=False
 )

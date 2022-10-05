@@ -27,7 +27,7 @@ async def create_task(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_active_user),
 ):
-    instance = Task.manager(db).create(**dict(task_in))
+    instance = await Task.manager(db).create(**dict(task_in))
     if task_in.remind_at is not None:
         background_tasks.add_task(remind, instance)
     return instance

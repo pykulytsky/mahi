@@ -3,15 +3,15 @@ from .base import BaseManager, BaseManagerMixin
 
 
 class TasksBaseManager(BaseManager):
-    def create(self, disable_check: bool = False, **fields):
-        instance = super().create(disable_check, **fields)
+    async def create(self, disable_check: bool = False, **fields):
+        instance = await super().create(disable_check, **fields)
         # self.handle_activity(instance, "created")
 
         return instance
 
-    def delete(self, instance):
+    async def delete(self, instance):
         # self.handle_activity(instance, "deleted")
-        return super().delete(instance)
+        return await super().delete(instance)
 
     async def update(self, id, **updated_fields):
         # self.handle_activity(self.get(id=id), "updated")
@@ -28,17 +28,17 @@ class TasksBaseManager(BaseManager):
             actor = instance.owner
         try:
             if not actor.journal:
-                user.ActivityJournal.manager(self.db).create(user=actor)
+                await user.ActivityJournal.manager(self.db).create(user=actor)
         except AttributeError:
-            user.ActivityJournal.manager(self.db).create(user=actor)
+            await user.ActivityJournal.manager(self.db).create(user=actor)
 
         target = {self.model.__name__.lower(): instance}
         try:
-            return user.Activity.manager(self.db).create(
+            return await user.Activity.manager(self.db).create(
                 journal=actor.journal, actor=actor, action=action, **target
             )
         except AttributeError:
-            return user.Activity.manager(self.db).create(
+            return await user.Activity.manager(self.db).create(
                 actor=actor, action=action, **target
             )
 
@@ -62,7 +62,7 @@ class TasksManager(TasksBaseManager):
         for task in model.tasks:
             if task.order > instance.order:
                 await tasks.Task.manager(self.db).update(task.id, order=task.order - 1)
-        return super().delete(instance)
+        return await super().delete(instance)
 
     async def reorder_source(
         self,
@@ -111,20 +111,20 @@ class SectionManager(TasksBaseManager):
         for section in await tasks.Project.manager(self.db).get(id=fields["project_id"]).sections:
             if section.order >= fields["order"]:
                 await tasks.Section.manager(self.db).update(id=section.id, order=section.order + 1)
-        return super().create(disable_check, **fields)
+        return await super().create(disable_check, **fields)
 
     async def delete(self, instance):
         for section in instance.project.sections:
             if section.order > instance.order:
                 await tasks.Section.manager(self.db).update(id=section.id, order=section.order - 1)
-        return super().delete(instance)
+        return await super().delete(instance)
 
     async def reorder(self, instance, destination, order: int):
         fields = instance.__dict__.copy()
         fields.pop("_sa_instance_state")
         fields["order"] = order
         await self.delete(instance)
-        return tasks.Section.manager(self.db).create(**fields)
+        return await tasks.Section.manager(self.db).create(**fields)
 
 
 class TasksBaseManagerMixin(BaseManagerMixin):

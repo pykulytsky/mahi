@@ -8,3 +8,5 @@ class Timestamped(Base):
     __abstract__ = True
     created = Column(DateTime(timezone=True), default=func.now())
     updated = Column(DateTime, onupdate=func.now(), default=func.now())
+
+    __mapper_args__ = {"eager_defaults": True}

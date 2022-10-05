@@ -3,6 +3,7 @@ from typing import List, Type
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExists
 from app.db.base_class import Base
@@ -22,16 +23,16 @@ class BaseManager:
         instance = self.model(**fields)
 
         self.db.add(instance)
-        self.db.commit()
+        await self.db.commit()
         await self.db.refresh(instance)
 
         return instance
 
-    def delete(self, instance):
+    async def delete(self, instance):
         if not isinstance(instance, self.model):
             raise TypeError(f"Instance must be {str(self.model)} not {type(instance)}")
         self.db.delete(instance)
-        self.db.commit()
+        await self.db.commit()
 
     async def all(
         self,
@@ -42,8 +43,9 @@ class BaseManager:
     ):
         try:
             if desc:
+                print("desc")
                 result = await self.db.execute(
-                    select(self.model)
+                    select(self.model).options(selectinload(self.model.tasks)).options(selectinload(self.model.sections))
                     .order_by(getattr(self.model, order_by).desc())
                     .offset(skip)
                     .limit(limit)
@@ -84,8 +86,8 @@ class BaseManager:
         for field in updated_fields:
             setattr(instance, field, updated_fields[field])
 
-        self.db.commit()
-        self.db.refresh(instance)
+        await self.db.commit()
+        await self.db.refresh(instance)
 
         return instance
 
@@ -167,7 +169,7 @@ class BaseManager:
                 )  # noqa
 
     async def refresh(self, instance):
-        self.db.commit()
+        await self.db.commit()
         await self.db.refresh(instance)
 
         return instance
