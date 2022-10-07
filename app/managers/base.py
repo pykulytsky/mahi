@@ -3,7 +3,7 @@ from typing import List, Type, Union
 from sqlalchemy import MetaData
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExists
+from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from app.db.base_class import Base
 
 
@@ -67,7 +67,7 @@ class BaseManager:
         if instance:
             return instance
 
-        raise ObjectDoesNotExists(
+        raise ObjectDoesNotExist(
             f"No {self.model.__name__.lower()} with such parameters."
         )
 
@@ -127,14 +127,14 @@ class BaseManager:
         try:
             instance = self.get(**fields)
             return instance
-        except ObjectDoesNotExists:
+        except ObjectDoesNotExist:
             return False
 
     def exists(self, **fields):
         try:
             self.get(**fields)
             return True
-        except ObjectDoesNotExists:
+        except ObjectDoesNotExist:
             return False
 
     def _get_model_fields(self) -> List[str]:

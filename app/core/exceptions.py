@@ -2,7 +2,7 @@ class NotValidModel(Exception):
     pass
 
 
-class ObjectDoesNotExists(Exception):
+class ObjectDoesNotExist(Exception):
     pass
 
 

@@ -11,7 +11,7 @@ from starlette.routing import BaseRoute
 
 from app import models
 from app.api.deps import get_current_active_user, get_db
-from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExists
+from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 
 
 class BaseCrudRouter(APIRouter):
@@ -285,7 +285,7 @@ class CrudRouter(BaseCrudRouter):
         async def route(id: int, db: Session = Depends(get_db)):
             try:
                 return self.model.manager(db).get(id=id)
-            except ObjectDoesNotExists:
+            except ObjectDoesNotExist:
                 raise HTTPException(
                     status_code=400, detail=f"{self.model.__name__} does not exists"
                 )

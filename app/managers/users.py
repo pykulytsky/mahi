@@ -7,7 +7,7 @@ from passlib.hash import pbkdf2_sha256
 from app import models
 from app.api.exceptions import WrongLoginCredentials
 from app.core.config import settings
-from app.core.exceptions import ObjectDoesNotExists
+from app.core.exceptions import ObjectDoesNotExist
 from app.managers.base import BaseManager, BaseManagerMixin
 
 
@@ -44,7 +44,7 @@ class UserManager(BaseManager):
                 return user
             else:
                 raise WrongLoginCredentials("Password didn't match.")
-        except ObjectDoesNotExists:
+        except ObjectDoesNotExist:
             raise WrongLoginCredentials("No user with such email was found.")
 
     def generate_access_token(
@@ -70,7 +70,7 @@ class UserManager(BaseManager):
             models.ActivityJournal.manager(self.db).delete(
                 models.ActivityJournal.manager(self.db).get(user_id=instance.id)
             )
-        except ObjectDoesNotExists:
+        except ObjectDoesNotExist:
             pass
         return super().delete(instance)
 

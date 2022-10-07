@@ -33,10 +33,11 @@ class User(Timestamped, UserManagerMixin):
     journal = relationship("ActivityJournal", back_populates="user", uselist=False)
     activities = relationship("Activity", back_populates="actor")
     messages = relationship("Message", back_populates="user")
+    reactions = relationship("Reaction", secondary="userreaction", back_populates="users")
 
     @hybrid_property
     def full_name(self) -> str:
-        return self.first_name + " " + self.last_name
+        return str(self.first_name) + " " + str(self.last_name)
 
 
 class ActivityJournal(Timestamped, BaseManagerMixin):

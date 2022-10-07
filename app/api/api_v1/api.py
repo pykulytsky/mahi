@@ -7,6 +7,7 @@ from app.api.api_v1.endpoints.tasks import (
     tag_items,
     tags,
     task_items,
+    reactions
 )
 
 api_router = APIRouter()
@@ -17,3 +18,4 @@ api_router.include_router(task_items.router)
 api_router.include_router(tags.router)
 api_router.include_router(tag_items.router)
 api_router.include_router(sections.router)
+api_router.include_router(reactions.router)

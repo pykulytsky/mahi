@@ -12,7 +12,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.db.types import Priority
-from app.managers.base import BaseManagerMixin
+from app.managers.base import BaseManager, BaseManagerMixin
 from app.managers.tasks import TasksBaseManagerMixin, TasksManagerMixin, SectionsManagerMixin
 from app.models.base import Timestamped
 
@@ -107,6 +107,8 @@ class Task(Timestamped, TasksManagerMixin):
 
     related_activities = relationship("Activity", back_populates="task")
 
+    reactions = relationship("Reaction", back_populates="task")
+
 
 @event.listens_for(Task.is_done, "set")
 def track_task_completion(target, value, oldvalue, initiator):
@@ -116,3 +118,19 @@ def track_task_completion(target, value, oldvalue, initiator):
             target.done_at = func.now()
         else:
             target.done_at = None
+
+
+class UserReaction(Timestamped, BaseManagerMixin):
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    reaction_id = Column(Integer, ForeignKey("reaction.id"))
+
+
+class Reaction(Timestamped, BaseManagerMixin):
+    id = Column(Integer, primary_key=True, index=True)
+    emoji = Column(String, nullable=False)
+
+    task_id = Column(Integer, ForeignKey("task.id"))
+    task = relationship("Task", back_populates="reactions")
+
+    users = relationship("User", secondary="userreaction", back_populates="reactions")

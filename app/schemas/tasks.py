@@ -3,6 +3,7 @@ from datetime import date, datetime
 from pydantic import BaseModel
 
 from .tags import TagInDB
+from .reactions import Reaction
 
 
 class TaskBase(BaseModel):
@@ -53,6 +54,7 @@ class Task(TaskInDBBase):
     tags: list[TagInDB] | None = None
     project_id: int | None = None
     section_id: int | None = None
+    reactions: list[Reaction]
 
 
 class TaskJSONSerializable(BaseModel):
