@@ -416,6 +416,22 @@ doc = ["mkdocs (>=1.1.2,<2.0.0)", "mkdocs-material (>=8.1.4,<9.0.0)", "mdx-inclu
 test = ["pytest (>=6.2.4,<7.0.0)", "pytest-cov (>=2.12.0,<4.0.0)", "mypy (==0.910)", "flake8 (>=3.8.3,<4.0.0)", "black (==22.3.0)", "isort (>=5.0.6,<6.0.0)", "requests (>=2.24.0,<3.0.0)", "httpx (>=0.14.0,<0.19.0)", "email_validator (>=1.1.1,<2.0.0)", "sqlalchemy (>=1.3.18,<1.5.0)", "peewee (>=3.13.3,<4.0.0)", "databases[sqlite] (>=0.3.2,<0.6.0)", "orjson (>=3.2.1,<4.0.0)", "ujson (>=4.0.1,!=4.0.2,!=4.1.0,!=4.2.0,!=4.3.0,!=5.0.0,!=5.1.0,<6.0.0)", "python-multipart (>=0.0.5,<0.0.6)", "flask (>=1.1.2,<3.0.0)", "anyio[trio] (>=3.2.1,<4.0.0)", "types-ujson (==4.2.1)", "types-orjson (==3.6.2)", "types-dataclasses (==0.6.5)"]
 
 [[package]]
+name = "fastapi-permissions"
+version = "0.2.7"
+description = "Row Level Permissions for FastAPI"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+fastapi = ">=0.33.0"
+python-multipart = ">=0.0.5"
+
+[package.extras]
+test = ["tox", "pytest-randomly", "pytest-asyncio", "pytest-mock", "pytest-cov", "pytest (>=4.0.0)"]
+dev = ["fastapi", "passlib", "pyjwt", "pre-commit", "keyring", "isort (>=5.0.0)", "flake8-comprehensions", "flake8", "black"]
+
+[[package]]
 name = "fastapi-plugins"
 version = "0.10.0"
 description = "Plugins for FastAPI framework"
@@ -436,6 +452,18 @@ test = ["uvicorn", "tox", "pytest-cov", "pytest", "m2r", "flake8", "docker-compo
 memcached = ["aiomcache (>=0.7)", "aiojobs (>=1.0)", "aioredis[hiredis] (>=2.0)", "python-json-logger (>=2.0)", "tenacity (>=8.0)", "pydantic (>=1.0.0,<2.0.0)", "fastapi (>=0.74)"]
 fakeredis = ["fakeredis[lua] (>=1.8)", "aiojobs (>=1.0)", "aioredis[hiredis] (>=2.0)", "python-json-logger (>=2.0)", "tenacity (>=8.0)", "pydantic (>=1.0.0,<2.0.0)", "fastapi (>=0.74)"]
 all = ["aiomcache (>=0.7)", "aiojobs (>=1.0)", "aioredis[hiredis] (>=2.0)", "python-json-logger (>=2.0)", "tenacity (>=8.0)", "pydantic (>=1.0.0,<2.0.0)", "fastapi (>=0.74)"]
+
+[[package]]
+name = "fastapi-sqlalchemy"
+version = "0.2.1"
+description = "Adds simple SQLAlchemy support to FastAPI"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+SQLAlchemy = ">=1.2"
+starlette = ">=0.12.9"
 
 [[package]]
 name = "flake8"
@@ -1365,7 +1393,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "26a57aeebca25a7e078b76c5c04c63e21110be20e96be71984f37521f6dba3c9"
+content-hash = "58307471e50b95128ef41c7065587c6f0e31c536863a7226aa750c89f37ed765"
 
 [metadata.files]
 aiojobs = []
@@ -1414,7 +1442,9 @@ dnspython = []
 email-validator = []
 executing = []
 fastapi = []
+fastapi-permissions = []
 fastapi-plugins = []
+fastapi-sqlalchemy = []
 flake8 = [
     {file = "flake8-4.0.1-py2.py3-none-any.whl", hash = "sha256:479b1304f72536a55948cb40a32dce8bb0ffe3501e26eaf292c7e60eb5e0428d"},
     {file = "flake8-4.0.1.tar.gz", hash = "sha256:806e034dda44114815e23c16ef92f95c91e4c71100ff52813adf7132a6ad870d"},

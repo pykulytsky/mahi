@@ -83,8 +83,8 @@ class BaseCrudRouter(APIRouter):
         path: str,
         endpoint: Callable[..., Any],
         *,
-        openapi_extra: Optional = None,
-        generate_unique_id_function: Optional = None,
+        openapi_extra: Optional[str] = None,
+        generate_unique_id_function: Optional[str] = None,
         response_model: Optional[Type[Any]] = None,
         status_code: Optional[int] = None,
         response_description: Optional[str] = None,
@@ -269,7 +269,7 @@ class CrudRouter(BaseCrudRouter):
             skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
         ):
 
-            return self.model.manager(db).all(skip, limit, order_by, desc)
+            return self.model.manager().all(skip, limit, order_by, desc)
 
         return await _get_all(skip, limit, db)
 
@@ -277,14 +277,14 @@ class CrudRouter(BaseCrudRouter):
         async def route(
             instance_create_schema: self.create_schema, db: Session = Depends(get_db)
         ):
-            return self.model.manager(db).create(**dict(instance_create_schema))
+            return self.model.manager().create(**dict(instance_create_schema))
 
         return route
 
     def _get(self) -> Callable:
         async def route(id: int, db: Session = Depends(get_db)):
             try:
-                return self.model.manager(db).get(id=id)
+                return self.model.manager().get(id=id)
             except ObjectDoesNotExist:
                 raise HTTPException(
                     status_code=400, detail=f"{self.model.__name__} does not exists"
@@ -296,7 +296,7 @@ class CrudRouter(BaseCrudRouter):
         async def route(
             id, update_schema: self.update_schema, db: Session = Depends(get_db)
         ):
-            return self.model.manager(db).update(
+            return self.model.manager().update(
                 id, **update_schema.dict(exclude_unset=True)
             )
 
@@ -304,7 +304,7 @@ class CrudRouter(BaseCrudRouter):
 
     def _delete(self) -> Callable:
         async def route(id, db: Session = Depends(get_db)):
-            return self.model.manager(db).delete(self.model.manager(db).get(id=id))
+            return self.model.manager().delete(self.model.manager().get(id=id))
 
         return route
 
@@ -357,11 +357,15 @@ class AuthenticatedCrudRouter(CrudRouter):
             user: models.User = Depends(get_current_active_user),
         ):
             if self.owner_field_is_required:
-                return self.model.manager(db).create(
+                return self.model.manager().create(
                     **dict(instance_create_schema), owner=user
                 )
-            return self.model.manager(db).create(
+            return self.model.manager().create(
                 **dict(instance_create_schema),
             )
 
         return route
+
+
+class PermissionedCrudRouter(CrudRouter):
+    pass

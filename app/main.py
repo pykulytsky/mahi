@@ -8,6 +8,8 @@ from fastapi_plugins import redis_plugin
 from sse_starlette.sse import EventSourceResponse
 from starlette.middleware.cors import CORSMiddleware
 
+from fastapi_sqlalchemy import DBSessionMiddleware  # middleware helper
+
 from app.api.api_v1.api import api_router
 from app.core.config import settings
 from app.sse.notifications import sse_router
@@ -17,6 +19,8 @@ app = FastAPI(
 )
 
 app.mount("/static/", StaticFiles(directory="app/static"), name="static")
+
+app.add_middleware(DBSessionMiddleware, db_url=settings.SQLALCHEMY_DATABASE_URI)
 
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(

@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from fastapi_permissions import Allow
 
 from .section import Section
 from .tasks import Task
@@ -31,7 +32,27 @@ class ProjectInDBBase(ProjectBase):
         orm_mode = True
 
 
+class Participant(BaseModel):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
 class Project(ProjectInDBBase):
     owner_id: int
     tasks: list[Task]
     sections: list[Section]
+    participants: list[Participant]
+
+    def __acl__(self):
+        acl_list = [
+            (Allow, f"user:{self.owner_id}", "view"),
+            (Allow, f"user:{self.owner_id}", "edit"),
+            (Allow, f"user:{self.owner_id}", "delete"),
+        ]
+        for p in self.participants:
+            acl_list.append((Allow, f"user:{p.id}", "view"))
+            acl_list.append((Allow, f"user:{p.id}", "edit"))
+
+        return acl_list

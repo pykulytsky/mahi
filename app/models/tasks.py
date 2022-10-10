@@ -12,9 +12,15 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.db.types import Priority
-from app.managers.base import BaseManager, BaseManagerMixin
+from app.managers.base import BaseManagerMixin
 from app.managers.tasks import TasksBaseManagerMixin, TasksManagerMixin, SectionsManagerMixin
 from app.models.base import Timestamped
+
+
+class Participant(Timestamped):
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    project_id = Column(Integer, ForeignKey("project.id"))
 
 
 class Project(Timestamped, TasksBaseManagerMixin):
@@ -24,6 +30,8 @@ class Project(Timestamped, TasksBaseManagerMixin):
 
     owner_id = Column(Integer, ForeignKey("user.id"))
     owner = relationship("User", back_populates="projects")
+
+    participants = relationship("User", secondary="participant", back_populates="participated_projects")
 
     is_favorite = Column(Boolean, default=False)
     is_pinned = Column(Boolean, default=False)

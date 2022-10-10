@@ -63,12 +63,12 @@ class UserManager(BaseManager):
         return encoded_jwt
 
     def create_activity_journal(self, user):
-        return models.ActivityJournal.manager(self.db).create(user=user)
+        return models.ActivityJournal.manager().create(user=user)
 
     def delete(self, instance):
         try:
-            models.ActivityJournal.manager(self.db).delete(
-                models.ActivityJournal.manager(self.db).get(user_id=instance.id)
+            models.ActivityJournal.manager().delete(
+                models.ActivityJournal.manager().get(user_id=instance.id)
             )
         except ObjectDoesNotExist:
             pass
@@ -77,5 +77,5 @@ class UserManager(BaseManager):
 
 class UserManagerMixin(BaseManagerMixin):
     @classmethod
-    def manager(cls, db):
-        return UserManager(cls, db)
+    def manager(cls):
+        return UserManager(cls)

@@ -26,6 +26,7 @@ class User(Timestamped, UserManagerMixin):
     last_login = Column(DateTime, nullable=True)
 
     projects = relationship("Project", back_populates="owner")
+    participated_projects = relationship("Project", secondary="participant", back_populates="participants")
     tags = relationship("Tag", back_populates="owner")
 
     tasks_goal_per_day = Column(Integer, default=5)

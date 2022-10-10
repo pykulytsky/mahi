@@ -50,7 +50,7 @@ def test_api_uses_db(client, user, mocker):
 
 
 def test_create_user(client, db):
-    users_count = len(User.manager(db).all())
+    users_count = len(User.manager().all())
     response = client.post(
         "users/",
         json={
@@ -63,9 +63,9 @@ def test_create_user(client, db):
 
     assert response.status_code == 201
     assert response.json()["email"] == "tests@t.tt"
-    assert len(User.manager(db).all()) != users_count
+    assert len(User.manager().all()) != users_count
 
-    User.manager(db).delete(User.manager(db).get(id=response.json()["id"]))
+    User.manager().delete(User.manager().get(id=response.json()["id"]))
 
 
 def test_access_token(client, user):

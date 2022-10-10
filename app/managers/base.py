@@ -1,36 +1,35 @@
 from typing import List, Type, Union
 
 from sqlalchemy import MetaData
-from sqlalchemy.orm import Session
 
 from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from app.db.base_class import Base
 
+from fastapi_sqlalchemy import db
+
 
 class BaseManager:
-    def __init__(self, klass: Type, db: Session) -> None:
+    def __init__(self, klass: Type, schema: Type | None = None) -> None:
         if not issubclass(klass, Base):
             raise ImproperlyConfigured(f"Type {klass.__name__} is not suported.")
         self.model = klass
-
-        self.db = db
+        self.schema = schema
 
     def create(self, disable_check: bool = False, **fields):
         if not disable_check:
             self.check_fields(**fields)
         instance = self.model(**fields)
 
-        self.db.add(instance)
-        self.db.commit()
-        self.db.refresh(instance)
-
+        db.session.add(instance)
+        db.session.commit()
+        db.session.refresh(instance)
         return instance
 
     def delete(self, instance):
         if not isinstance(instance, self.model):
             raise TypeError(f"Instance must be {str(self.model)} not {type(instance)}")
-        self.db.delete(instance)
-        self.db.commit()
+        db.session.delete(instance)
+        db.session.commit()
 
     def all(
         self,
@@ -42,28 +41,28 @@ class BaseManager:
         try:
             if desc:
                 return (
-                    self.db.query(self.model)
+                    db.session.query(self.model)
                     .order_by(getattr(self.model, order_by).desc())
                     .offset(skip)
                     .limit(limit)
                     .all()
                 )
             return (
-                self.db.query(self.model)
+                db.session.query(self.model)
                 .order_by(getattr(self.model, order_by))
                 .offset(skip)
                 .limit(limit)
                 .all()
             )
         except AttributeError:
-            return self.db.query(self.model).offset(skip).limit(limit).all()
+            return db.session.query(self.model).offset(skip).limit(limit).all()
 
     def get(self, **fields) -> Type:
         self.check_fields(**fields)
 
         expression = [getattr(self.model, k) == fields[k] for k in fields.keys()]
 
-        instance = self.db.query(self.model).filter(*expression).first()
+        instance = db.session.query(self.model).filter(*expression).first()
         if instance:
             return instance
 
@@ -78,8 +77,8 @@ class BaseManager:
         for field in updated_fields:
             setattr(instance, field, updated_fields[field])
 
-        self.db.commit()
-        self.db.refresh(instance)
+        db.session.commit()
+        db.session.refresh(instance)
 
         return instance
 
@@ -97,7 +96,7 @@ class BaseManager:
         try:
             if desc:
                 return (
-                    self.db.query(self.model)
+                    db.session.query(self.model)
                     .order_by(
                         getattr(self.model, order_by).desc(), self.model.updated.desc()
                     )
@@ -107,7 +106,7 @@ class BaseManager:
                     .all()
                 )
             return (
-                self.db.query(self.model)
+                db.session.query(self.model)
                 .order_by(getattr(self.model, order_by), self.model.updated.desc())
                 .filter(*expression)
                 .offset(skip)
@@ -116,7 +115,7 @@ class BaseManager:
             )
         except AttributeError:
             return (
-                self.db.query(self.model)
+                db.session.query(self.model)
                 .filter(*expression)
                 .offset(skip)
                 .limit(limit)
@@ -157,13 +156,13 @@ class BaseManager:
                 )  # noqa
 
     def refresh(self, instance):
-        self.db.commit()
-        self.db.refresh(instance)
+        db.session.commit()
+        db.session.refresh(instance)
 
         return instance
 
 
 class BaseManagerMixin:
     @classmethod
-    def manager(cls, db):
-        return BaseManager(cls, db)
+    def manager(cls):
+        return BaseManager(cls)

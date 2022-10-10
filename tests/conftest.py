@@ -32,7 +32,7 @@ def db():
 
 @pytest.fixture()
 def user(db):
-    user = User.manager(db).create(
+    user = User.manager().create(
         email="test3@test.py",
         email_verified=True,
         first_name="Test",
@@ -40,7 +40,7 @@ def user(db):
         password="1234",
     )
     yield user
-    User.manager(db).delete(user)
+    User.manager().delete(user)
 
 
 @pytest.fixture
@@ -50,14 +50,14 @@ def journal(user):
 
 @pytest.fixture()
 def another_user(db):
-    user = User.manager(db).create(
+    user = User.manager().create(
         email="test4@test.py",
         first_name="Test",
         last_name="Testov",
         password="1234",
     )
     yield user
-    User.manager(db).delete(user)
+    User.manager().delete(user)
 
 
 @pytest.fixture()
@@ -68,7 +68,7 @@ def auth_client(db, user):
 @pytest.fixture
 def token(db, user):
     access_token_expires = timedelta(minutes=99999)
-    return User.manager(db).generate_access_token(
+    return User.manager().generate_access_token(
         subject=user.id, expires_delta=access_token_expires
     )
 
@@ -76,6 +76,6 @@ def token(db, user):
 @pytest.fixture
 def another_token(db, another_user):
     access_token_expires = timedelta(minutes=99999)
-    return User.manager(db).generate_access_token(
+    return User.manager().generate_access_token(
         subject=another_user.id, expires_delta=access_token_expires
     )
