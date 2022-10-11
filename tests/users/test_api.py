@@ -40,17 +40,17 @@ def test_access_get_me(auth_client, user):
 
 
 def test_api_uses_db(client, user, mocker):
-    mocker.patch("app.managers.users.UserManager.get")
+    mocker.patch("app.models.User.get")
     try:
         client.get(f"users/{user.id}")
     except ValidationError:
         pass
 
-    UserManager.get.assert_called_once_with(id=user.id)
+    User.get.assert_called_once_with(id=user.id)
 
 
 def test_create_user(client, db):
-    users_count = len(User.manager().all())
+    users_count = len(User.all())
     response = client.post(
         "users/",
         json={
@@ -63,9 +63,9 @@ def test_create_user(client, db):
 
     assert response.status_code == 201
     assert response.json()["email"] == "tests@t.tt"
-    assert len(User.manager().all()) != users_count
+    assert len(User.all()) != users_count
 
-    User.manager().delete(User.manager().get(id=response.json()["id"]))
+    User.delete(User.get(id=response.json()["id"]))
 
 
 def test_access_token(client, user):

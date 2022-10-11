@@ -7,6 +7,7 @@ from app.db.base import Base
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models import User
+from fastapi_sqlalchemy import db as DB
 
 from .test_client import JWTAuthTestClient
 
@@ -21,18 +22,15 @@ def client():
     return TestClient(app, base_url="http://testserver/api/v1/")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(autouse=True, scope="session")
 def db():
-    try:
-        db = SessionLocal()
-        yield db
-    finally:
-        db.close()
+    with DB() as session:
+        yield session
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def user(db):
-    user = User.manager().create(
+    user = User.create(
         email="test3@test.py",
         email_verified=True,
         first_name="Test",
@@ -40,7 +38,7 @@ def user(db):
         password="1234",
     )
     yield user
-    User.manager().delete(user)
+    User.delete(user)
 
 
 @pytest.fixture
@@ -50,14 +48,14 @@ def journal(user):
 
 @pytest.fixture()
 def another_user(db):
-    user = User.manager().create(
+    user = User.create(
         email="test4@test.py",
         first_name="Test",
         last_name="Testov",
         password="1234",
     )
     yield user
-    User.manager().delete(user)
+    User.delete(user)
 
 
 @pytest.fixture()
@@ -68,7 +66,7 @@ def auth_client(db, user):
 @pytest.fixture
 def token(db, user):
     access_token_expires = timedelta(minutes=99999)
-    return User.manager().generate_access_token(
+    return User.generate_access_token(
         subject=user.id, expires_delta=access_token_expires
     )
 
@@ -76,6 +74,6 @@ def token(db, user):
 @pytest.fixture
 def another_token(db, another_user):
     access_token_expires = timedelta(minutes=99999)
-    return User.manager().generate_access_token(
+    return User.generate_access_token(
         subject=another_user.id, expires_delta=access_token_expires
     )

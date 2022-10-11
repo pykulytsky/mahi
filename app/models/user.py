@@ -5,12 +5,12 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
-from app.managers.base import BaseManagerMixin
-from app.managers.users import UserManagerMixin
+from app.managers.base import BaseManager
+from app.managers.users import UserManager
 from app.models.base import Timestamped
 
 
-class User(Timestamped, UserManagerMixin):
+class User(Timestamped, UserManager):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)
@@ -41,7 +41,7 @@ class User(Timestamped, UserManagerMixin):
         return str(self.first_name) + " " + str(self.last_name)
 
 
-class ActivityJournal(Timestamped, BaseManagerMixin):
+class ActivityJournal(Timestamped, BaseManager):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", back_populates="journal")
@@ -49,7 +49,7 @@ class ActivityJournal(Timestamped, BaseManagerMixin):
     activities = relationship("Activity", back_populates="journal")
 
 
-class Activity(Timestamped, BaseManagerMixin):
+class Activity(Timestamped, BaseManager):
     id = Column(Integer, primary_key=True, index=True)
 
     journal_id = Column(Integer, ForeignKey("activityjournal.id"))
@@ -91,7 +91,7 @@ class Activity(Timestamped, BaseManagerMixin):
             return f"{self.actor} {self.action} {self.target}"
 
 
-class Message(Timestamped, BaseManagerMixin):
+class Message(Timestamped, BaseManager):
     id = Column(Integer, primary_key=True, index=True)
 
     published = Column(Boolean, default=False)

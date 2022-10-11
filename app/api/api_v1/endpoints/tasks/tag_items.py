@@ -23,6 +23,6 @@ async def remove_tag(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_active_user)
 ):
-    tag_item = TagItem.manager().get(**tag_data.dict())
-    TagItem.manager().delete(tag_item)
-    return Task.manager().get(id=tag_data.task_id)
+    tag_item = TagItem.get(**tag_data.dict())
+    TagItem.delete(tag_item)
+    return Task.get(id=tag_data.task_id)

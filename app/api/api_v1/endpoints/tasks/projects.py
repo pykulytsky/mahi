@@ -19,7 +19,7 @@ router = AuthenticatedCrudRouter(
 
 
 def get_project_from_db(id):
-    return schemas.Project.from_orm(Project.manager().get(id=id))
+    return schemas.Project.from_orm(Project.get(id=id))
 
 
 @router.get("/{id}")
@@ -32,7 +32,7 @@ async def update_project(
     update_schema: schemas.ProjectUpdate,
     project: schemas.Project = Permission("edit", get_project_from_db)
 ):
-    return Project.manager().update(
+    return Project.update(
         id=project.id,
         **update_schema.dict(exclude_unset=True)
     )
@@ -42,14 +42,14 @@ async def update_project(
 async def delete_project(
     project: schemas.Project = Permission("edit", get_project_from_db)
 ):
-    return Project.manager().delete(Project.manager().get(id=project.id))
+    return Project.delete(Project.get(id=project.id))
 
 
 @router.get("/user/", response_model=list[schemas.Project])
 async def get_user_projects(
     user: User = Depends(get_current_active_user),
 ):
-    return Project.manager().filter(owner=user)
+    return Project.filter(owner=user)
 
 
 @router.get("/{project_id}/tasks", response_model=list[schemas.Task])
@@ -59,15 +59,14 @@ async def get_tasks_by_project(
     limit: int = 100,
     order_by: str = "created",
     desc: bool = False,
-    db: Session = Depends(get_db),
     _: User = Depends(get_current_active_user),
 ):
-    project = Project.manager().get(id=project_id)
+    project = Project.get(id=project_id)
     if project.show_completed_tasks:
-        return Task.manager().filter(
+        return Task.filter(
             skip, limit, order_by, desc, project_id=project_id
         )
 
-    return Task.manager().filter(
+    return Task.filter(
         skip, limit, order_by, desc, project_id=project_id, is_done=False
     )

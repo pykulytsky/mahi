@@ -5,9 +5,9 @@ from app.models import Task
 
 @pytest.fixture
 def initial_task(db, project) -> Task:
-    task = Task.manager().create(name="Test task", project_id=project.id)
+    task = Task.create(name="Test task", project_id=project.id)
     yield task
-    Task.manager().delete(task)
+    Task.delete(task)
 
 
 def test_task_order_created_if_parent_is_empty(initial_task):
@@ -15,70 +15,70 @@ def test_task_order_created_if_parent_is_empty(initial_task):
 
 
 def test_task_reorder_by_adding_new_task(project, db, initial_task):
-    new_task = Task.manager().create(name="Test task", project_id=project.id)
+    new_task = Task.create(name="Test task", project_id=project.id)
 
     assert new_task.order == 0
-    assert Task.manager().get(id=initial_task.id).order == 1
+    assert Task.get(id=initial_task.id).order == 1
 
-    Task.manager().delete(new_task)
+    Task.delete(new_task)
 
 
 def test_reorder_by_deleting_task(project, db):
-    new_task = Task.manager().create(name="Test task", project_id=project.id)
-    another = Task.manager().create(name="Test task", project_id=project.id)
-    new = Task.manager().get(id=new_task.id)
+    new_task = Task.create(name="Test task", project_id=project.id)
+    another = Task.create(name="Test task", project_id=project.id)
+    new = Task.get(id=new_task.id)
 
     assert new.order == 1
     assert another.order == 0
 
-    Task.manager().delete(another)
-    new = Task.manager().get(id=new_task.id)
+    Task.delete(another)
+    new = Task.get(id=new_task.id)
 
     assert new.order == 0
 
-    Task.manager().delete(new)
+    Task.delete(new)
 
 
 def test_reorder_isnt_performed_by_deleting_higher_task(project, db):
-    new_task = Task.manager().create(name="Test task", project_id=project.id)
-    another = Task.manager().create(name="Test task", project_id=project.id)
-    new = Task.manager().get(id=new_task.id)
+    new_task = Task.create(name="Test task", project_id=project.id)
+    another = Task.create(name="Test task", project_id=project.id)
+    new = Task.get(id=new_task.id)
 
     assert another.order == 0
 
-    Task.manager().delete(new)
-    another = Task.manager().get(id=another.id)
+    Task.delete(new)
+    another = Task.get(id=another.id)
 
     assert another.order == 0
 
-    Task.manager().delete(another)
+    Task.delete(another)
 
 
 def test_create_task_with_custom_order(db, project):
-    new_task = Task.manager().create(name="Test task", project_id=project.id)
-    another = Task.manager().create(
+    new_task = Task.create(name="Test task", project_id=project.id)
+    another = Task.create(
         name="Test task", project_id=project.id, order=new_task.order + 1
     )
-    new = Task.manager().get(id=new_task.id)
+    new = Task.get(id=new_task.id)
 
     assert new.order == 0
     assert another.order == 1
 
-    Task.manager().delete(another)
-    Task.manager().delete(new)
+    Task.delete(another)
+    Task.delete(new)
 
 
 def test_reorder_from_project_to_project(db, project):
-    new_task = Task.manager().create(name="Test task", project_id=project.id)
-    another = Task.manager().create(name="Test task", project_id=project.id)
+    new_task = Task.create(name="Test task", project_id=project.id)
+    another = Task.create(name="Test task", project_id=project.id)
 
     assert another.order == 0
 
-    another_updated = Task.manager().reorder(another, project, 1)
-    new_updated = Task.manager().get(id=new_task.id)
+    another_updated = Task.reorder(another, project, 1)
+    new_updated = Task.get(id=new_task.id)
 
     assert another_updated.order == 1
     assert new_updated.order == 0
 
-    Task.manager().delete(another_updated)
-    Task.manager().delete(new_updated)
+    Task.delete(another_updated)
+    Task.delete(new_updated)

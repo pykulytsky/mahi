@@ -8,11 +8,6 @@ class SomeClass:
     pass
 
 
-def test_class_validation(db):
-    with pytest.raises(ImproperlyConfigured):
-        BaseManager(SomeClass, db)
-
-
 def test_manager_all(manager, user):
     assert user in manager.all()
 

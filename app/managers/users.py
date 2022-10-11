@@ -12,20 +12,22 @@ from app.managers.base import BaseManager, BaseManagerMixin
 
 
 class UserManager(BaseManager):
-    def create(self, **fields):
-        self.check_fields(**fields)
-        fields["password"] = self.set_password(fields["password"])
+    @classmethod
+    def create(cls, **fields):
+        cls.check_fields(**fields)
+        fields["password"] = cls.set_password(fields["password"])
 
         instance = super().create(disable_check=True, **fields)
 
-        self.refresh(instance)
+        cls.refresh(instance)
 
-        self.create_activity_journal(user=instance)
+        cls.create_activity_journal(user=instance)
 
         return instance
 
-    def set_password(self, passwd: str) -> str:
-        password = self._hasher().hash(passwd)
+    @classmethod
+    def set_password(cls, passwd: str) -> str:
+        password = cls._hasher().hash(passwd)
         return password
 
     @staticmethod
@@ -36,19 +38,21 @@ class UserManager(BaseManager):
     def _hasher():
         return pbkdf2_sha256.using(salt=bytes(settings.SECRET_KEY.encode("utf-8")))
 
-    def authenticate(self, email: str, password: str):
+    @classmethod
+    def authenticate(cls, email: str, password: str):
         try:
-            user = self.get(email=email)
+            user = cls.get(email=email)
 
-            if self.verify_password(password, user):
+            if cls.verify_password(password, user):
                 return user
             else:
                 raise WrongLoginCredentials("Password didn't match.")
         except ObjectDoesNotExist:
             raise WrongLoginCredentials("No user with such email was found.")
 
+    @classmethod
     def generate_access_token(
-        self, subject: str | Any, expires_delta: timedelta = None
+        cls, subject: str | Any, expires_delta: timedelta = None
     ) -> str:
         if expires_delta:
             expire = datetime.utcnow() + expires_delta
@@ -62,13 +66,15 @@ class UserManager(BaseManager):
         )
         return encoded_jwt
 
-    def create_activity_journal(self, user):
-        return models.ActivityJournal.manager().create(user=user)
+    @classmethod
+    def create_activity_journal(cls, user):
+        return models.ActivityJournal.create(user=user)
 
-    def delete(self, instance):
+    @classmethod
+    def delete(cls, instance):
         try:
-            models.ActivityJournal.manager().delete(
-                models.ActivityJournal.manager().get(user_id=instance.id)
+            models.ActivityJournal.delete(
+                models.ActivityJournal.get(user_id=instance.id)
             )
         except ObjectDoesNotExist:
             pass

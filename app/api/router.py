@@ -12,6 +12,7 @@ from starlette.routing import BaseRoute
 from app import models
 from app.api.deps import get_current_active_user, get_db
 from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
+from app.managers.base import BaseManager
 
 
 class BaseCrudRouter(APIRouter):
@@ -33,11 +34,8 @@ class BaseCrudRouter(APIRouter):
         *args,
         **kwargs,
     ) -> None:
-        if not hasattr(model, "manager"):
-            raise AttributeError(
-                f"Model {model.__name__} is not suported, 'manager' field is required."
-            )
-
+        if not issubclass(model, BaseManager):
+            raise AttributeError("Model class has to inherit BaseManager.")
         self.model = model
 
         self.get_schema = get_schema
@@ -269,7 +267,7 @@ class CrudRouter(BaseCrudRouter):
             skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
         ):
 
-            return self.model.manager().all(skip, limit, order_by, desc)
+            return self.model.all(skip, limit, order_by, desc)
 
         return await _get_all(skip, limit, db)
 
@@ -277,14 +275,14 @@ class CrudRouter(BaseCrudRouter):
         async def route(
             instance_create_schema: self.create_schema, db: Session = Depends(get_db)
         ):
-            return self.model.manager().create(**dict(instance_create_schema))
+            return self.model.create(**dict(instance_create_schema))
 
         return route
 
     def _get(self) -> Callable:
         async def route(id: int, db: Session = Depends(get_db)):
             try:
-                return self.model.manager().get(id=id)
+                return self.model.get(id=id)
             except ObjectDoesNotExist:
                 raise HTTPException(
                     status_code=400, detail=f"{self.model.__name__} does not exists"
@@ -296,7 +294,7 @@ class CrudRouter(BaseCrudRouter):
         async def route(
             id, update_schema: self.update_schema, db: Session = Depends(get_db)
         ):
-            return self.model.manager().update(
+            return self.model.update(
                 id, **update_schema.dict(exclude_unset=True)
             )
 
@@ -304,7 +302,7 @@ class CrudRouter(BaseCrudRouter):
 
     def _delete(self) -> Callable:
         async def route(id, db: Session = Depends(get_db)):
-            return self.model.manager().delete(self.model.manager().get(id=id))
+            return self.model.delete(self.model.get(id=id))
 
         return route
 
@@ -357,10 +355,10 @@ class AuthenticatedCrudRouter(CrudRouter):
             user: models.User = Depends(get_current_active_user),
         ):
             if self.owner_field_is_required:
-                return self.model.manager().create(
+                return self.model.create(
                     **dict(instance_create_schema), owner=user
                 )
-            return self.model.manager().create(
+            return self.model.create(
                 **dict(instance_create_schema),
             )
 
