@@ -27,7 +27,7 @@ async def create_task(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_active_user),
 ):
-    instance = Task.manager(db).create(**dict(task_in))
+    instance = Task.create(**dict(task_in))
     if task_in.remind_at is not None:
         background_tasks.add_task(remind, instance)
     return instance
@@ -40,10 +40,10 @@ async def get_tasks_by_date(
     user: User = Depends(get_current_active_user),
 ):
     raw_date = datetime.strptime(date, "%Y-%m-%d")
-    owned_projects = Project.manager(db).filter(owner=user)
+    owned_projects = Project.filter(owner=user)
     tasks = []
     for project in owned_projects:
-        tasks += Task.manager(db).filter(deadline=raw_date, project=project)
+        tasks += Task.filter(deadline=raw_date, project=project)
     return tasks
 
 
@@ -54,9 +54,9 @@ async def move_task_to_proejct(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_active_user),
 ):
-    task = Task.manager(db).get(id=id)
+    task = Task.get(id=id)
     if task.project.owner == user:
-        updated_task = Task.manager(db).update(id=task.id, project_id=project_id)
+        updated_task = Task.update(id=task.id, project_id=project_id)
         return updated_task
     else:
         raise HTTPException(status_code=400, detail="Authentication error")
@@ -70,14 +70,14 @@ async def reorder_tasks(
     _: User = Depends(get_current_active_user),
 ):
 
-    project_id, section_id = (reorder_schema.source_id, None) if reorder_schema.source_type == "project" else (None, reorder_schema.source_id)
-    instance = Task.manager(db).get(
-        section_id=section_id,
-        project_id=project_id,
-        order=order
+    project_id, section_id = (
+        (reorder_schema.source_id, None)
+        if reorder_schema.source_type == "project"
+        else (None, reorder_schema.source_id)
     )
+    instance = Task.get(section_id=section_id, project_id=project_id, order=order)
 
     model = Section if reorder_schema.destination_type == "section" else Project
-    destination = model.manager(db).get(id=reorder_schema.destination_id)
+    destination = model.get(id=reorder_schema.destination_id)
 
-    return Task.manager(db).reorder(instance, destination, reorder_schema.order)
+    return Task.reorder(instance, destination, reorder_schema.order)

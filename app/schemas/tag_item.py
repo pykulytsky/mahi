@@ -15,4 +15,3 @@ class TagItem(TagItemBase):
 
     class Config:
         orm_mode = True
-

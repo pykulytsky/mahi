@@ -2,8 +2,8 @@ from datetime import date, datetime
 
 from pydantic import BaseModel
 
-from .tags import TagInDB
 from .reactions import Reaction
+from .tags import TagInDB
 
 
 class TaskBase(BaseModel):

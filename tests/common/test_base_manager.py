@@ -1,16 +1,8 @@
 import pytest
 
-from app.core.exceptions import ImproperlyConfigured
-from app.managers import BaseManager
-
 
 class SomeClass:
     pass
-
-
-def test_class_validation(db):
-    with pytest.raises(ImproperlyConfigured):
-        BaseManager(SomeClass, db)
 
 
 def test_manager_all(manager, user):

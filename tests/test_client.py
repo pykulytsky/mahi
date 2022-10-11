@@ -40,7 +40,7 @@ class JWTAuthTestClient(TestClient):
     ) -> None:
 
         self.db = db
-        self.token = User.manager(self.db).generate_access_token(user.id)
+        self.token = User.generate_access_token(user.id)
 
         super().__init__(
             app,

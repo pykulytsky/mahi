@@ -31,7 +31,8 @@ class UserInDBBase(UserBase):
 
 # Additional properties to return via API
 class User(UserInDBBase):
-    pass
+    def principals(self):
+        return [f"user:{self.id}"]
 
 
 # Additional properties stored in DB

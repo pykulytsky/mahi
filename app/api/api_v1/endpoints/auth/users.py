@@ -17,11 +17,11 @@ router = CrudRouter(
 
 @router.get("/me/", response_model=schemas.User)
 async def get_me(
-    user: User = Depends(get_current_active_user),
+    user: schemas.User = Depends(get_current_active_user),
 ):
     return user
 
 
 @router.get("/me/activities", response_model=list[schemas.Activity])
-async def get_my_activities(user: User = Depends(get_current_active_user)):
+async def get_my_activities(user: schemas.User = Depends(get_current_active_user)):
     return user.activities[::-1]

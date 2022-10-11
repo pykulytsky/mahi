@@ -3,11 +3,11 @@ from fastapi import APIRouter
 from app.api.api_v1.endpoints.auth import authentication, users
 from app.api.api_v1.endpoints.tasks import (
     projects,
+    reactions,
     sections,
     tag_items,
     tags,
     task_items,
-    reactions
 )
 
 api_router = APIRouter()

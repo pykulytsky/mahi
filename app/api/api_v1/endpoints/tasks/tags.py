@@ -21,4 +21,4 @@ router = AuthenticatedCrudRouter(
 async def get_user_tags(
     db: Session = Depends(get_db), user: User = Depends(get_current_active_user)
 ):
-    return Tag.manager(db).filter(owner_id=user.id)
+    return Tag.filter(owner_id=user.id)

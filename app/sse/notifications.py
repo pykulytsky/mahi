@@ -68,7 +68,7 @@ async def general_chanel(
     try:
         return EventSourceResponse(consume(redis, user, "general"))
     finally:
-        User.manager(db).update(user.id, last_login=datetime.now())
+        User.update(user.id, last_login=datetime.now())
 
 
 @sse_router.get("/personal/{user_token}")

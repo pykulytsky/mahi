@@ -24,10 +24,10 @@ async def reorder_section(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_active_user),
 ):
-    instance = Section.manager(db).get(id=id)
+    instance = Section.get(id=id)
     for sec in instance.project.sections:
         if sec.order >= order:
-            Section.manager(db).update(sec.id, order=sec.order + 1)
-    instance = Section.manager(db).update(id=instance.id, order=order)
+            Section.update(sec.id, order=sec.order + 1)
+    instance = Section.update(id=instance.id, order=order)
 
     return instance
