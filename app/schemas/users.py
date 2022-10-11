@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from pydantic import BaseModel, EmailStr
-from fastapi_permissions import Allow
 
 
 # Shared properties

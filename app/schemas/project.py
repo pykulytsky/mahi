@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from fastapi_permissions import Allow
+from pydantic import BaseModel
 
 from .section import Section
 from .tasks import Task

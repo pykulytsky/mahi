@@ -5,9 +5,7 @@ from app.models import Section, Task
 
 @pytest.fixture
 def section(db, project):
-    section = Section.create(
-        name="test section", project_id=project.id, order=0
-    )
+    section = Section.create(name="test section", project_id=project.id, order=0)
     yield section
     Section.delete(section)
 

@@ -1,8 +1,5 @@
 import pytest
 
-from app.core.exceptions import ImproperlyConfigured
-from app.managers import BaseManager
-
 
 class SomeClass:
     pass

@@ -13,7 +13,7 @@ from sqlalchemy.sql import func
 
 from app.db.types import Priority
 from app.managers.base import BaseManager
-from app.managers.tasks import TasksBaseManager, TasksManager, SectionManager
+from app.managers.tasks import SectionManager, TasksBaseManager, TasksManager
 from app.models.base import Timestamped
 
 
@@ -31,7 +31,9 @@ class Project(Timestamped, TasksBaseManager):
     owner_id = Column(Integer, ForeignKey("user.id"))
     owner = relationship("User", back_populates="projects")
 
-    participants = relationship("User", secondary="participant", back_populates="participated_projects")
+    participants = relationship(
+        "User", secondary="participant", back_populates="participated_projects"
+    )
 
     is_favorite = Column(Boolean, default=False)
     is_pinned = Column(Boolean, default=False)
@@ -50,7 +52,9 @@ class Project(Timestamped, TasksBaseManager):
     show_completed_tasks = Column(Boolean, default=True)
 
     tasks = relationship(
-        "Task", back_populates="project", order_by="app.models.tasks.Task.is_done, app.models.tasks.Task.order"
+        "Task",
+        back_populates="project",
+        order_by="app.models.tasks.Task.is_done, app.models.tasks.Task.order",
     )
     related_activities = relationship("Activity", back_populates="project")
 
@@ -66,7 +70,9 @@ class Section(Timestamped, SectionManager):
     is_collapsed = Column(Boolean, default=False)
 
     tasks = relationship(
-        "Task", back_populates="section", order_by="app.models.tasks.Task.is_done, app.models.tasks.Task.order"
+        "Task",
+        back_populates="section",
+        order_by="app.models.tasks.Task.is_done, app.models.tasks.Task.order",
     )
 
 

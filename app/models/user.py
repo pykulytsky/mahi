@@ -26,7 +26,9 @@ class User(Timestamped, UserManager):
     last_login = Column(DateTime, nullable=True)
 
     projects = relationship("Project", back_populates="owner")
-    participated_projects = relationship("Project", secondary="participant", back_populates="participants")
+    participated_projects = relationship(
+        "Project", secondary="participant", back_populates="participants"
+    )
     tags = relationship("Tag", back_populates="owner")
 
     tasks_goal_per_day = Column(Integer, default=5)
@@ -34,7 +36,9 @@ class User(Timestamped, UserManager):
     journal = relationship("ActivityJournal", back_populates="user", uselist=False)
     activities = relationship("Activity", back_populates="actor")
     messages = relationship("Message", back_populates="user")
-    reactions = relationship("Reaction", secondary="userreaction", back_populates="users")
+    reactions = relationship(
+        "Reaction", secondary="userreaction", back_populates="users"
+    )
 
     @hybrid_property
     def full_name(self) -> str:

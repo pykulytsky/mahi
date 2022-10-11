@@ -1,11 +1,9 @@
 from typing import List, Type, Union
 
+from fastapi_sqlalchemy import db
 from sqlalchemy import MetaData
 
-from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
-from app.db.base_class import Base
-
-from fastapi_sqlalchemy import db
+from app.core.exceptions import ObjectDoesNotExist
 
 
 class BaseManager:
@@ -62,9 +60,7 @@ class BaseManager:
         if instance:
             return instance
 
-        raise ObjectDoesNotExist(
-            f"No {cls.__name__.lower()} with such parameters."
-        )
+        raise ObjectDoesNotExist(f"No {cls.__name__.lower()} with such parameters.")
 
     @classmethod
     def update(cls, id, **updated_fields):
@@ -95,9 +91,7 @@ class BaseManager:
             if desc:
                 return (
                     db.session.query(cls)
-                    .order_by(
-                        getattr(cls, order_by).desc(), cls.updated.desc()
-                    )
+                    .order_by(getattr(cls, order_by).desc(), cls.updated.desc())
                     .filter(*expression)
                     .offset(skip)
                     .limit(limit)

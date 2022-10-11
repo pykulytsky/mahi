@@ -294,9 +294,7 @@ class CrudRouter(BaseCrudRouter):
         async def route(
             id, update_schema: self.update_schema, db: Session = Depends(get_db)
         ):
-            return self.model.update(
-                id, **update_schema.dict(exclude_unset=True)
-            )
+            return self.model.update(id, **update_schema.dict(exclude_unset=True))
 
         return route
 
@@ -355,9 +353,7 @@ class AuthenticatedCrudRouter(CrudRouter):
             user: models.User = Depends(get_current_active_user),
         ):
             if self.owner_field_is_required:
-                return self.model.create(
-                    **dict(instance_create_schema), owner=user
-                )
+                return self.model.create(**dict(instance_create_schema), owner=user)
             return self.model.create(
                 **dict(instance_create_schema),
             )

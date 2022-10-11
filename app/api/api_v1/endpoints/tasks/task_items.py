@@ -70,12 +70,12 @@ async def reorder_tasks(
     _: User = Depends(get_current_active_user),
 ):
 
-    project_id, section_id = (reorder_schema.source_id, None) if reorder_schema.source_type == "project" else (None, reorder_schema.source_id)
-    instance = Task.get(
-        section_id=section_id,
-        project_id=project_id,
-        order=order
+    project_id, section_id = (
+        (reorder_schema.source_id, None)
+        if reorder_schema.source_type == "project"
+        else (None, reorder_schema.source_id)
     )
+    instance = Task.get(section_id=section_id, project_id=project_id, order=order)
 
     model = Section if reorder_schema.destination_type == "section" else Project
     destination = model.get(id=reorder_schema.destination_id)

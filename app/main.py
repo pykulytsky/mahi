@@ -5,10 +5,9 @@ import aioredis
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi_plugins import redis_plugin
+from fastapi_sqlalchemy import DBSessionMiddleware  # middleware helper
 from sse_starlette.sse import EventSourceResponse
 from starlette.middleware.cors import CORSMiddleware
-
-from fastapi_sqlalchemy import DBSessionMiddleware  # middleware helper
 
 from app.api.api_v1.api import api_router
 from app.core.config import settings

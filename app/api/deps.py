@@ -3,8 +3,8 @@ from typing import Generator
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from fastapi_permissions import Authenticated, Everyone, configure_permissions
 from pydantic import ValidationError
-from fastapi_permissions import Everyone, Authenticated, configure_permissions
 
 from app import models, schemas
 from app.core import security
@@ -24,9 +24,7 @@ def get_db() -> Generator:
         db.close()
 
 
-def get_current_user(
-    token: str = Depends(reusable_oauth2)
-) -> models.User | None:
+def get_current_user(token: str = Depends(reusable_oauth2)) -> models.User | None:
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]

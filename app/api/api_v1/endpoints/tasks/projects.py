@@ -1,11 +1,9 @@
 from fastapi import Depends
-from sqlalchemy.orm import Session
 
 from app import schemas
-from app.api.deps import Permission, get_current_active_user, get_db
+from app.api.deps import Permission, get_current_active_user
 from app.api.router import AuthenticatedCrudRouter
 from app.models import Project, Task, User
-
 
 router = AuthenticatedCrudRouter(
     model=Project,
@@ -23,19 +21,18 @@ def get_project_from_db(id):
 
 
 @router.get("/{id}")
-async def get_project(project: schemas.Project = Permission("view", get_project_from_db)):
+async def get_project(
+    project: schemas.Project = Permission("view", get_project_from_db)
+):
     return project
 
 
 @router.patch("/{id}", response_model=schemas.Project)
 async def update_project(
     update_schema: schemas.ProjectUpdate,
-    project: schemas.Project = Permission("edit", get_project_from_db)
+    project: schemas.Project = Permission("edit", get_project_from_db),
 ):
-    return Project.update(
-        id=project.id,
-        **update_schema.dict(exclude_unset=True)
-    )
+    return Project.update(id=project.id, **update_schema.dict(exclude_unset=True))
 
 
 @router.delete("/{id}")
@@ -63,9 +60,7 @@ async def get_tasks_by_project(
 ):
     project = Project.get(id=project_id)
     if project.show_completed_tasks:
-        return Task.filter(
-            skip, limit, order_by, desc, project_id=project_id
-        )
+        return Task.filter(skip, limit, order_by, desc, project_id=project_id)
 
     return Task.filter(
         skip, limit, order_by, desc, project_id=project_id, is_done=False

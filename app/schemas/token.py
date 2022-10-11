@@ -10,5 +10,6 @@ class TokenData(BaseModel):
     username: str | None = None
     scopes: list[str] = None
 
+
 class TokenPayload(BaseModel):
     sub: int | None = None

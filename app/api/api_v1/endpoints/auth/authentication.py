@@ -22,9 +22,7 @@ def get_access_token(
     OAuth2 compatible token login, get an access token for future requests
     """
     try:
-        user = User.authenticate(
-            email=form_data.username, password=form_data.password
-        )
+        user = User.authenticate(email=form_data.username, password=form_data.password)
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         return {
             "access_token": User.generate_access_token(

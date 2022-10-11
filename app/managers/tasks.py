@@ -1,4 +1,5 @@
 from app.models import tasks, user
+
 from .base import BaseManager, BaseManagerMixin
 
 
@@ -41,9 +42,7 @@ class TasksBaseManager(BaseManager):
                 journal=actor.journal, actor=actor, action=action, **target
             )
         except AttributeError:
-            return user.Activity.create(
-                actor=actor, action=action, **target
-            )
+            return user.Activity.create(actor=actor, action=action, **target)
 
 
 class TasksManager(TasksBaseManager):
@@ -77,34 +76,23 @@ class TasksManager(TasksBaseManager):
         source = instance.section or instance.project
         for task in source.tasks:
             if task.order > instance.order:
-                tasks.Task.update(
-                    task.id,
-                    order=task.order - 1
-                )
+                tasks.Task.update(task.id, order=task.order - 1)
 
     @classmethod
-    def reorder_destination(
-        cls,
-        order: int,
-        source
-    ):
+    def reorder_destination(cls, order: int, source):
         for task in source.tasks:
             if task.order >= order:
-                tasks.Task.update(
-                    task.id,
-                    order=task.order + 1
-                )
+                tasks.Task.update(task.id, order=task.order + 1)
 
     @classmethod
-    def reorder(
-        cls,
-        instance,
-        destination,
-        order: int
-    ):
+    def reorder(cls, instance, destination, order: int):
         cls.reorder_source(instance)
         cls.reorder_destination(order, destination)
-        project_id, section_id = (destination.id, None) if isinstance(destination, tasks.Project) else (None, destination.id)
+        project_id, section_id = (
+            (destination.id, None)
+            if isinstance(destination, tasks.Project)
+            else (None, destination.id)
+        )
         return tasks.Task.update(
             id=instance.id,
             order=order,

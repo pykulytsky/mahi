@@ -2,7 +2,6 @@ import jwt
 from pydantic import ValidationError
 
 from app.core.config import settings
-from app.managers.users import UserManager
 from app.models import User
 
 

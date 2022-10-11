@@ -2,12 +2,12 @@ from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
+from fastapi_sqlalchemy import db as DB
 
 from app.db.base import Base
-from app.db.session import SessionLocal, engine
+from app.db.session import engine
 from app.main import app
 from app.models import User
-from fastapi_sqlalchemy import db as DB
 
 from .test_client import JWTAuthTestClient
 
