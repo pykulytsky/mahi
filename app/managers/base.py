@@ -157,9 +157,3 @@ class BaseManager:
         db.session.refresh(instance)
 
         return instance
-
-
-class BaseManagerMixin:
-    @classmethod
-    def manager(cls):
-        return BaseManager(cls)

@@ -60,11 +60,10 @@ async def subscribe(pubsub: client.PubSub) -> None:
 @sse_router.get("/general/{user_token}")
 async def general_chanel(
     user_token: str,
-    db: Session = Depends(deps.get_db),
     redis: Redis = Depends(depends_redis),
 ):
 
-    user = deps.get_current_active_user(deps.get_current_user(db, user_token))
+    user = deps.get_current_active_user(deps.get_current_user(user_token))
     try:
         return EventSourceResponse(consume(redis, user, "general"))
     finally:
@@ -74,11 +73,10 @@ async def general_chanel(
 @sse_router.get("/personal/{user_token}")
 async def personal_chanel(
     user_token: str,
-    db: Session = Depends(deps.get_db),
     redis: Redis = Depends(depends_redis),
 ):
 
-    user = deps.get_current_active_user(deps.get_current_user(db, user_token))
+    user = deps.get_current_active_user(deps.get_current_user(user_token))
 
     return EventSourceResponse(consume(redis, user, f"personal_{user.id}"))
 
@@ -114,10 +112,9 @@ async def general_chanel_v2(
 async def personal_chanel_v2(
     request: Request,
     user_token: str,
-    db: Session = Depends(deps.get_db),
 ):
 
-    user = deps.get_current_active_user(deps.get_current_user(db, user_token))
+    user = deps.get_current_active_user(deps.get_current_user(user_token))
 
     await request.app.pubsub.subscribe(str(user.id))
 

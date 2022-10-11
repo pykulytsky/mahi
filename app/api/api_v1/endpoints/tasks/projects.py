@@ -1,4 +1,5 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException
+from fastapi_sqlalchemy import db
 
 from app import schemas
 from app.api.deps import Permission, get_current_active_user
@@ -65,3 +66,32 @@ async def get_tasks_by_project(
     return Task.filter(
         skip, limit, order_by, desc, project_id=project_id, is_done=False
     )
+
+
+@router.get("/{id}/invite")
+async def get_invitation_code(
+    project: schemas.Project = Permission("invite", get_project_from_db),
+):
+    return {"code": Project.generate_invitaion_code(project.id)}
+
+
+@router.get("/invitation/{code}", response_model=schemas.Project)
+async def accept_invitation(
+    code: str,
+    user: User = Depends(get_current_active_user)
+):
+    project = Project.validate_invitation_code(code)
+    if user not in project.participants and user != project.owner:
+        project.participants.append(user)
+        db.session.commit()
+        db.session.refresh(project)
+        return project
+    else:
+        raise HTTPException(status_code=404, detail="Current user is already participant of this project")
+
+
+@router.get("/{id}/direct-invite")
+async def send_direct_invitation(
+    project: schemas.Project = Permission("invite", get_project_from_db),
+):
+    pass

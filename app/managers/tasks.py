@@ -1,6 +1,12 @@
-from app.models import tasks, user
+from datetime import datetime, timedelta
+from fastapi import HTTPException
+import jwt
+from pydantic import ValidationError
 
-from .base import BaseManager, BaseManagerMixin
+from app.core.config import settings
+from app.models import tasks, user
+from .base import BaseManager
+from app import schemas
 
 
 class TasksBaseManager(BaseManager):
@@ -126,19 +132,27 @@ class SectionManager(TasksBaseManager):
         return tasks.Section.manager.create(**fields)
 
 
-class TasksBaseManagerMixin(BaseManagerMixin):
+class ProjectManager(TasksBaseManager):
     @classmethod
-    def manager(cls):
-        return TasksBaseManager(cls)
+    def generate_invitaion_code(
+        cls,
+        id: int,
+        expires: timedelta = timedelta(hours=24)
+    ) -> bytes:
+        expire = datetime.utcnow() + expires
+        to_encode = {"exp": expire, "sub": str(id)}
+        encoded_jwt = jwt.encode(
+            to_encode,
+            settings.SECRET_KEY,
+            algorithm=settings.ALGORITHM
+        )
+        return encoded_jwt
 
-
-class TasksManagerMixin(BaseManagerMixin):
     @classmethod
-    def manager(cls):
-        return TasksManager(cls)
-
-
-class SectionsManagerMixin(BaseManagerMixin):
-    @classmethod
-    def manager(cls):
-        return SectionManager(cls)
+    def validate_invitation_code(cls, code: str):
+        try:
+            payload = jwt.decode(code, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+            code = schemas.TokenPayload(**payload)
+            return tasks.Project.get(id=int(code.sub))
+        except (jwt.PyJWTError, ValidationError):
+            raise HTTPException(status_code=403, detail="Wrong invitation code")

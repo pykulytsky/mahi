@@ -34,6 +34,10 @@ class ProjectInDBBase(ProjectBase):
 
 class Participant(BaseModel):
     id: int
+    email: str
+    avatar: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
 
     class Config:
         orm_mode = True
@@ -48,6 +52,7 @@ class Project(ProjectInDBBase):
     def __acl__(self):
         acl_list = [
             (Allow, f"user:{self.owner_id}", "view"),
+            (Allow, f"user:{self.owner_id}", "invite"),
             (Allow, f"user:{self.owner_id}", "edit"),
             (Allow, f"user:{self.owner_id}", "delete"),
         ]

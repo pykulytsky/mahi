@@ -13,7 +13,7 @@ from sqlalchemy.sql import func
 
 from app.db.types import Priority
 from app.managers.base import BaseManager
-from app.managers.tasks import SectionManager, TasksBaseManager, TasksManager
+from app.managers.tasks import ProjectManager, SectionManager, TasksBaseManager, TasksManager
 from app.models.base import Timestamped
 
 
@@ -23,7 +23,7 @@ class Participant(Timestamped):
     project_id = Column(Integer, ForeignKey("project.id"))
 
 
-class Project(Timestamped, TasksBaseManager):
+class Project(Timestamped, ProjectManager):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=False, nullable=False)
     description = Column(String, unique=False, nullable=True)

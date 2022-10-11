@@ -1,1 +1,1 @@
-from .base import BaseManager, BaseManagerMixin  # noqa
+from .base import BaseManager  # noqa

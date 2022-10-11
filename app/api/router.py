@@ -10,7 +10,7 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import BaseRoute
 
 from app import models
-from app.api.deps import get_current_active_user, get_db
+from app.api.deps import get_current_active_user
 from app.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from app.managers.base import BaseManager
 
@@ -28,7 +28,6 @@ class BaseCrudRouter(APIRouter):
         get_schema: BaseModel,
         create_schema: BaseModel,
         update_schema: BaseModel = None,
-        db: Session = Depends(get_db),
         prefix: Optional[str] = None,
         tags: Optional[List] = list(),
         *args,
@@ -180,7 +179,6 @@ class CrudRouter(BaseCrudRouter):
         get_schema: BaseModel,
         create_schema: BaseModel,
         update_schema: BaseModel = None,
-        db: Session = Depends(get_db),
         prefix: Optional[str] = None,
         tags: Optional[List] = [],
         add_create_route: bool = True,
@@ -204,7 +202,6 @@ class CrudRouter(BaseCrudRouter):
                 "/",
                 self._get_all,
                 response_model=List[self.get_schema],
-                dependencies=[Depends(get_db)],
                 summary=f"Get all {self.model.__name__.lower()}s",
                 description=f"""
                 Retrieve {self.model.__name__.lower()}s.
@@ -221,7 +218,6 @@ class CrudRouter(BaseCrudRouter):
                     self._create(),
                     methods=["POST"],
                     response_model=self.get_schema,
-                    dependencies=[Depends(get_db)],
                     summary=f"Create new {self.model.__name__.lower()}",
                     status_code=201,
                     description=f"Create new {self.model.__name__.lower()}.",
@@ -231,7 +227,6 @@ class CrudRouter(BaseCrudRouter):
                 self._get(),
                 methods=["GET"],
                 response_model=self.get_schema,
-                dependencies=[Depends(get_db)],
                 summary=f"Get {self.model.__name__.lower()}",
                 description=f"Get {self.model.__name__.lower()} by ID.",
             )
@@ -240,7 +235,6 @@ class CrudRouter(BaseCrudRouter):
                 self._update(),
                 methods=["PATCH"],
                 response_model=self.get_schema,
-                dependencies=[Depends(get_db)],
                 summary=f"Patch {self.model.__name__.lower()}",
                 description=f"Patch {self.model.__name__.lower()} by ID.",
             )
@@ -249,7 +243,6 @@ class CrudRouter(BaseCrudRouter):
                 self._delete(),
                 methods=["DELETE"],
                 response_model=self.get_schema,
-                dependencies=[Depends(get_db)],
                 summary=f"Delete {self.model.__name__.lower()}",
                 description=f"Delete {self.model.__name__.lower()} by ID.",
             )
@@ -260,27 +253,26 @@ class CrudRouter(BaseCrudRouter):
         limit: int = 100,
         order_by: str = "created",
         desc: bool = False,
-        db: Session = Depends(get_db),
     ) -> Callable:
         @self.get("/", response_model=List[self.get_schema])
         async def _get_all(
-            skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+            skip: int = 0, limit: int = 100
         ):
 
             return self.model.all(skip, limit, order_by, desc)
 
-        return await _get_all(skip, limit, db)
+        return await _get_all(skip, limit)
 
     def _create(self) -> Callable:
         async def route(
-            instance_create_schema: self.create_schema, db: Session = Depends(get_db)
+            instance_create_schema: self.create_schema
         ):
             return self.model.create(**dict(instance_create_schema))
 
         return route
 
     def _get(self) -> Callable:
-        async def route(id: int, db: Session = Depends(get_db)):
+        async def route(id: int):
             try:
                 return self.model.get(id=id)
             except ObjectDoesNotExist:
@@ -292,14 +284,14 @@ class CrudRouter(BaseCrudRouter):
 
     def _update(self) -> Callable:
         async def route(
-            id, update_schema: self.update_schema, db: Session = Depends(get_db)
+            id, update_schema: self.update_schema
         ):
             return self.model.update(id, **update_schema.dict(exclude_unset=True))
 
         return route
 
     def _delete(self) -> Callable:
-        async def route(id, db: Session = Depends(get_db)):
+        async def route(id):
             return self.model.delete(self.model.get(id=id))
 
         return route
@@ -314,7 +306,6 @@ class AuthenticatedCrudRouter(CrudRouter):
         get_schema: BaseModel,
         create_schema: BaseModel,
         update_schema: BaseModel = None,
-        db: Session = Depends(get_db),
         prefix: Optional[str] = None,
         tags: Optional[List] = [],
         add_create_route: bool = False,
@@ -328,7 +319,6 @@ class AuthenticatedCrudRouter(CrudRouter):
             get_schema,
             create_schema,
             update_schema=update_schema,
-            db=db,
             prefix=prefix,
             tags=tags,
             add_create_route=add_create_route,
@@ -341,7 +331,6 @@ class AuthenticatedCrudRouter(CrudRouter):
             self._create(),
             methods=["POST"],
             response_model=self.get_schema,
-            dependencies=[Depends(get_db)],
             summary=f"Create {self.model.__name__}",
             status_code=201,
         )
@@ -349,7 +338,6 @@ class AuthenticatedCrudRouter(CrudRouter):
     def _create(self) -> Callable:
         async def route(
             instance_create_schema: self.create_schema,
-            db: Session = Depends(get_db),
             user: models.User = Depends(get_current_active_user),
         ):
             if self.owner_field_is_required:

@@ -8,7 +8,7 @@ from app import models
 from app.api.exceptions import WrongLoginCredentials
 from app.core.config import settings
 from app.core.exceptions import ObjectDoesNotExist
-from app.managers.base import BaseManager, BaseManagerMixin
+from app.managers.base import BaseManager
 
 
 class UserManager(BaseManager):
@@ -79,9 +79,3 @@ class UserManager(BaseManager):
         except ObjectDoesNotExist:
             pass
         return super().delete(instance)
-
-
-class UserManagerMixin(BaseManagerMixin):
-    @classmethod
-    def manager(cls):
-        return UserManager(cls)

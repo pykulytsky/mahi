@@ -4,7 +4,7 @@ from fastapi import BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import schemas
-from app.api.deps import get_current_active_user, get_db
+from app.api.deps import get_current_active_user
 from app.api.router import AuthenticatedCrudRouter
 from app.models import Project, Task, User
 from app.models.tasks import Section
@@ -24,7 +24,6 @@ router = AuthenticatedCrudRouter(
 async def create_task(
     task_in: schemas.TaskCreate,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
     _: User = Depends(get_current_active_user),
 ):
     instance = Task.create(**dict(task_in))
@@ -36,7 +35,6 @@ async def create_task(
 @router.get("/date/{date}", response_model=list[schemas.Task])
 async def get_tasks_by_date(
     date: str,
-    db: Session = Depends(get_db),
     user: User = Depends(get_current_active_user),
 ):
     raw_date = datetime.strptime(date, "%Y-%m-%d")
@@ -51,7 +49,6 @@ async def get_tasks_by_date(
 async def move_task_to_proejct(
     id: int,
     project_id: int,
-    db: Session = Depends(get_db),
     user: User = Depends(get_current_active_user),
 ):
     task = Task.get(id=id)
@@ -66,7 +63,6 @@ async def move_task_to_proejct(
 async def reorder_tasks(
     order: str | int,
     reorder_schema: schemas.TaskReorder,
-    db: Session = Depends(get_db),
     _: User = Depends(get_current_active_user),
 ):
 
