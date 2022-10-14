@@ -5,13 +5,13 @@ import aioredis
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi_plugins import redis_plugin
-from fastapi_sqlalchemy import DBSessionMiddleware  # middleware helper
 from sse_starlette.sse import EventSourceResponse
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.api_v1.api import api_router
 from app.core.config import settings
 from app.sse.notifications import sse_router
+from app.db import create_tables
 
 app = FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
@@ -19,7 +19,6 @@ app = FastAPI(
 
 app.mount("/static/", StaticFiles(directory="app/static"), name="static")
 
-app.add_middleware(DBSessionMiddleware, db_url=settings.SQLALCHEMY_DATABASE_URI)
 
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
@@ -33,9 +32,9 @@ if settings.BACKEND_CORS_ORIGINS:
 
 @app.on_event("startup")
 async def on_startup() -> None:
+    create_tables()
     await redis_plugin.init_app(app)
     app.redis = aioredis.from_url("redis://localhost")
-    app.pubsub = app.redis.pubsub()
     await redis_plugin.init()
 
 

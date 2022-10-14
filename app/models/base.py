@@ -1,10 +1,7 @@
-from sqlalchemy import Column, DateTime
-from sqlalchemy.sql import func
-
-from app.db.base_class import Base
+from datetime import datetime
+from sqlmodel import SQLModel, Field
 
 
-class Timestamped(Base):
-    __abstract__ = True
-    created = Column(DateTime(timezone=True), default=func.now())
-    updated = Column(DateTime, onupdate=func.now(), default=func.now())
+class Timestamped(SQLModel):
+    created: datetime = Field(default=datetime.utcnow())
+    updated: datetime = Field(default_factory=datetime.now)

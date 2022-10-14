@@ -1,14 +1,13 @@
 from datetime import datetime
 
 from fastapi import BackgroundTasks, Depends, HTTPException
-from sqlalchemy.orm import Session
 
 from app import schemas
-from app.api.deps import get_current_active_user
+from app.api.deps import Permission, get_current_active_user
 from app.api.router import AuthenticatedCrudRouter
 from app.models import Project, Task, User
 from app.models.tasks import Section
-from app.sse.tasks import remind
+from app.sse.tasks import deadline_remind, remind
 
 router = AuthenticatedCrudRouter(
     model=Task,
@@ -20,6 +19,17 @@ router = AuthenticatedCrudRouter(
 )
 
 
+def get_task_from_db(id):
+    return schemas.TaskDetail.from_orm(Task.get(id=id))
+
+
+@router.get("/{id}", response_model=schemas.TaskDetail)
+async def get_task(
+    task: schemas.TaskDetail = Permission("view", get_task_from_db)
+):
+    return task
+
+
 @router.post("/", response_model=schemas.Task)
 async def create_task(
     task_in: schemas.TaskCreate,
@@ -29,6 +39,8 @@ async def create_task(
     instance = Task.create(**dict(task_in))
     if task_in.remind_at is not None:
         background_tasks.add_task(remind, instance)
+    if task_in.deadline is not None:
+        background_tasks.add_task(deadline_remind, instance)
     return instance
 
 
@@ -77,3 +89,11 @@ async def reorder_tasks(
     destination = model.get(id=reorder_schema.destination_id)
 
     return Task.reorder(instance, destination, reorder_schema.order)
+
+
+@router.post("/{id}/assign/{user_id}", response_model=schemas.TaskDetail)
+async def assign_task(
+    user_id: int,
+    task: schemas.TaskDetail = Permission("edit", get_task_from_db),
+):
+    return task

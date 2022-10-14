@@ -1,108 +1,62 @@
-import uuid
+from typing import TYPE_CHECKING
+from sqlmodel import SQLModel, Field, Relationship
+from pydantic import EmailStr
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
+from .link_tables import Participant, Assignee, UserReactionLink
 
-from app.managers.base import BaseManager
-from app.managers.users import UserManager
-from app.models.base import Timestamped
+if TYPE_CHECKING:
+    from app.models import Project, Task, Tag, Reaction
 
 
-class User(Timestamped, UserManager):
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    password = Column(String, nullable=False)
+class UserBase(SQLModel):
+    email: EmailStr = Field(index=True)
+    first_name: str
+    last_name: str
 
-    first_name = Column(String, nullable=True)
-    last_name = Column(String, nullable=True)
-    avatar = Column(String, nullable=True)
 
-    verification_code = Column(UUID(as_uuid=True), default=uuid.uuid4())
-    email_verified = Column(Boolean, default=False)
-    is_active = Column(Boolean, default=True)
-    is_superuser = Column(Boolean, default=False)
-    last_login = Column(DateTime, nullable=True)
+class User(UserBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
 
-    projects = relationship("Project", back_populates="owner")
-    participated_projects = relationship(
-        "Project", secondary="participant", back_populates="participants"
+    password: str
+    is_active: bool = Field(default=True)
+
+    projects: list["Project"] = Relationship(back_populates="owner")
+    tags: list["Tag"] = Relationship(back_populates="owner")
+    tasks: list["Task"] = Relationship(back_populates="owner")
+    assigned_tasks: list["Task"] = Relationship(
+        back_populates="assigned_to", link_model=Assignee)
+
+    participated_projects: list["Project"] = Relationship(
+        back_populates="participants", link_model=Participant
     )
-    tags = relationship("Tag", back_populates="owner")
-
-    tasks_goal_per_day = Column(Integer, default=5)
-
-    journal = relationship("ActivityJournal", back_populates="user", uselist=False)
-    activities = relationship("Activity", back_populates="actor")
-    messages = relationship("Message", back_populates="user")
-    reactions = relationship(
-        "Reaction", secondary="userreaction", back_populates="users"
-    )
-
-    @hybrid_property
-    def full_name(self) -> str:
-        return str(self.first_name) + " " + str(self.last_name)
+    reactions: list["Reaction"] = Relationship(
+        back_populates="users", link_model=UserReactionLink)
 
 
-class ActivityJournal(Timestamped, BaseManager):
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
-    user = relationship("User", back_populates="journal")
-
-    activities = relationship("Activity", back_populates="journal")
+class UserCreate(UserBase):
+    password: str
 
 
-class Activity(Timestamped, BaseManager):
-    id = Column(Integer, primary_key=True, index=True)
-
-    journal_id = Column(Integer, ForeignKey("activityjournal.id"))
-    journal = relationship("ActivityJournal", back_populates="activities")
-
-    actor_id = Column(Integer, ForeignKey("user.id"))
-    actor = relationship("User", back_populates="activities")
-
-    action = Column(String)
-
-    project_id = Column(Integer, ForeignKey("project.id"))
-    project = relationship("Project", back_populates="related_activities")
-    task_id = Column(Integer, ForeignKey("task.id"))
-    task = relationship("Task", back_populates="related_activities")
-    tag_id = Column(Integer, ForeignKey("tag.id"))
-    tag = relationship("Tag", back_populates="related_activities")
-
-    @hybrid_property
-    def target(self):
-        if self.project:
-            return self.project
-        if self.tag:
-            return self.tag
-        if self.task:
-            return self.task
-
-    # @hybrid_property
-    # def target_type(self):
-    #     if self.project:
-    #         return "project"
-    #     if self.task:
-    #         return "task"
-    #     if self.task:
-    #         return "task"
-
-    @hybrid_property
-    def summary(self) -> str | None:
-        if self.target:
-            return f"{self.actor} {self.action} {self.target}"
+class UserRead(UserBase):
+    id: int
+    is_active: bool
 
 
-class Message(Timestamped, BaseManager):
-    id = Column(Integer, primary_key=True, index=True)
+class UserReadDetail(UserBase):
+    from app.models.project import ProjectRead
+    from app.models.tag import TagRead
+    from app.models.task import TaskRead
+    from app.models.reaction import ReactionRead
 
-    published = Column(Boolean, default=False)
-    read = Column(Boolean, default=False)
+    projects: list[ProjectRead]
+    participated_projects: list[ProjectRead]
+    tags: list[TagRead]
+    tasks: list[TaskRead]
+    assigned_tasks: list[TaskRead]
+    reactions: list[ReactionRead]
 
-    channel = Column(String, nullable=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
-    user = relationship("User", back_populates="messages")
 
-    body = Column(String, nullable=False)
+class UserUpdate(SQLModel):
+    email: EmailStr | None = None
+    first_name: str | None = None
+    last_name: str | None = None
