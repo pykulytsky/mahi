@@ -1,10 +1,9 @@
 from fastapi import Depends
-from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user
 from app.api.router import AuthenticatedCrudRouter
 from app.models import User
-from app.models.tasks import Section
+from app.models import Section
 from app.schemas import section
 
 router = AuthenticatedCrudRouter(

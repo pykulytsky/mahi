@@ -5,6 +5,7 @@ from app import schemas
 from app.api.deps import Permission, get_current_active_user
 from app.api.router import AuthenticatedCrudRouter
 from app.models import Project, Task, User
+from app.managers import ProjectManager
 
 router = AuthenticatedCrudRouter(
     model=Project,

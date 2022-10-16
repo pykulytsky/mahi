@@ -31,10 +31,8 @@ class SectionRead(SectionBase):
 
 
 class SectionReadDetail(SectionRead):
-    from app.models.project import ProjectRead
     from app.models.task import TaskRead
 
-    project: ProjectRead
     tasks: list[TaskRead]
 
 

@@ -133,3 +133,4 @@ dmypy.json
 
 poetry.lock
 settings.ini
+*.db

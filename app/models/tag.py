@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.models import Timestamped
-from app.models.link_tables import TaskTagLink, ProjectTagLink
+from app.models.link_tables import TaskTagLink
 
 if TYPE_CHECKING:
     from app.models import User, Task

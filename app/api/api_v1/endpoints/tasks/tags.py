@@ -1,5 +1,4 @@
 from fastapi import Depends
-from sqlalchemy.orm import Session
 
 from app import schemas
 from app.api.deps import get_current_active_user

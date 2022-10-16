@@ -1,17 +1,17 @@
 from typing import Optional, TYPE_CHECKING
 from sqlmodel import Field, SQLModel, Relationship
 
-from fastapi_sqlmodel.models import Timestamped
-from fastapi_sqlmodel.models.link_tables import TaskTagLink, Assignee
+from app.models import Timestamped
+from app.models.link_tables import TaskTagLink, Assignee
 
 if TYPE_CHECKING:
-    from fastapi_sqlmodel.models import Project, User, Section, Tag, Reaction
+    from app.models import Project, User, Section, Tag, Reaction
 
 
 class TaskBase(SQLModel):
     name: str = Field(index=True)
     description: str | None = Field(default=None)
-    order: int = Field(index=True)
+    order: int = Field(index=True, default=0)
 
 
 class Task(TaskBase, Timestamped, table=True):
@@ -42,12 +42,18 @@ class TaskRead(TaskBase):
 
 
 class TaskReadDetail(TaskRead):
-    from app.models.project import ProjectRead
     from app.models.section import SectionRead
     from app.models.tag import TagRead
     from app.models.reaction import ReactionRead
 
-    project: ProjectRead | None = None
     section: SectionRead | None = None
     tags: list[TagRead]
     reactions: list[ReactionRead]
+
+
+class TaskUpdate(SQLModel):
+    name: str | None = None
+    description: str | None = None
+    order: int | None = None
+    project_id: int | None = None
+    section_id: int | None = None

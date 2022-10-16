@@ -7,7 +7,7 @@ from app import schemas
 from app.api.deps import get_current_active_user
 from app.core.exceptions import ObjectDoesNotExist
 from app.models import User
-from app.models.tasks import Reaction, Task, UserReaction
+from app.models import Task, Reaction
 
 router = APIRouter(prefix="/reactions", tags=["task"])
 
@@ -20,13 +20,13 @@ async def add_reaction(
     task = Task.get(id=reaction.task_id)
     for r in task.reactions:
         if reaction.emoji == r.emoji:
-            UserReaction.create(user_id=user.id, reaction_id=r.id)
+            # UserReaction.create(user_id=user.id, reaction_id=r.id)
             db.session.commit()
             db.session.refresh(task)
             return Task.get(id=reaction.task_id)
 
     reaction = Reaction.create(emoji=reaction.emoji, task_id=reaction.task_id)
-    UserReaction.create(user_id=user.id, reaction_id=reaction.id)
+    # UserReaction.create(user_id=user.id, reaction_id=reaction.id)
     db.session.commit()
     db.session.refresh(task)
     return Task.get(id=reaction.task_id)
@@ -41,7 +41,8 @@ async def remove_reaction(
     for r in task.reactions:
         if reaction.emoji == r.emoji:
             try:
-                user_reaction = UserReaction.get(reaction_id=r.id, user_id=user.id)
+                # user_reaction = UserReaction.get(reaction_id=r.id, user_id=user.id)
+                pass
             except ObjectDoesNotExist:
                 return HTTPException(
                     status_code=404, detail="No reactions according to user was found."
