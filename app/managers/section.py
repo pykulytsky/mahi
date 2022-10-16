@@ -1,5 +1,6 @@
-from .base import Manager
 from app.models import Section, SectionCreate, SectionRead
+
+from .base import Manager
 
 
 class SectionManager(Manager):

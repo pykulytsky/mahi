@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING, Optional
+
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.models import Timestamped
 from app.models.link_tables import TaskTagLink
 
 if TYPE_CHECKING:
-    from app.models import User, Task
+    from app.models import Task, User
 
 
 class TagBase(SQLModel):
@@ -20,7 +21,8 @@ class Tag(TagBase, Timestamped, table=True):
     owner: Optional["User"] = Relationship(back_populates="tags")
 
     tasks: Optional["Task"] = Relationship(
-        back_populates="tags", link_model=TaskTagLink)
+        back_populates="tags", link_model=TaskTagLink
+    )
 
 
 class TagCreate(TagBase):
@@ -33,6 +35,7 @@ class TagRead(TagBase):
 
 class TagReadDetail(TagRead):
     from app.models.task import TaskRead
+
     owner: int  # TODO UserRead
     tasks: list[TaskRead]
 

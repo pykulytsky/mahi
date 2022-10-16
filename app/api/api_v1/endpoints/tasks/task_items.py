@@ -5,7 +5,7 @@ from fastapi import BackgroundTasks, Depends, HTTPException
 from app import schemas
 from app.api.deps import Permission, get_current_active_user
 from app.api.router import AuthenticatedCrudRouter
-from app.models import Project, Task, User, Section
+from app.models import Project, Section, Task, User
 from app.sse.tasks import deadline_remind, remind
 
 router = AuthenticatedCrudRouter(
@@ -23,9 +23,7 @@ def get_task_from_db(id):
 
 
 @router.get("/{id}", response_model=schemas.TaskDetail)
-async def get_task(
-    task: schemas.TaskDetail = Permission("view", get_task_from_db)
-):
+async def get_task(task: schemas.TaskDetail = Permission("view", get_task_from_db)):
     return task
 
 

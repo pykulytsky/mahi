@@ -17,7 +17,5 @@ router = AuthenticatedCrudRouter(
 
 
 @router.get("/user/", response_model=list[schemas.Tag])
-async def get_user_tags(
-    user: User = Depends(get_current_active_user)
-):
+async def get_user_tags(user: User = Depends(get_current_active_user)):
     return Tag.filter(owner_id=user.id)

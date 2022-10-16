@@ -5,7 +5,6 @@ from app import schemas
 from app.api.deps import Permission, get_current_active_user
 from app.api.router import AuthenticatedCrudRouter
 from app.models import Project, Task, User
-from app.managers import ProjectManager
 
 router = AuthenticatedCrudRouter(
     model=Project,
@@ -77,10 +76,7 @@ async def get_invitation_code(
 
 
 @router.get("/invitation/{code}", response_model=schemas.Project)
-async def accept_invitation(
-    code: str,
-    user: User = Depends(get_current_active_user)
-):
+async def accept_invitation(code: str, user: User = Depends(get_current_active_user)):
     project = Project.validate_invitation_code(code)
     if user not in project.participants and user != project.owner:
         project.participants.append(user)
@@ -88,7 +84,10 @@ async def accept_invitation(
         db.session.refresh(project)
         return project
     else:
-        raise HTTPException(status_code=404, detail="Current user is already participant of this project")
+        raise HTTPException(
+            status_code=404,
+            detail="Current user is already participant of this project",
+        )
 
 
 @router.get("/{id}/direct-invite")

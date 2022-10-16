@@ -1,4 +1,5 @@
 from datetime import date, datetime
+
 from fastapi_permissions import Allow, Authenticated
 from pydantic import BaseModel
 
@@ -101,11 +102,13 @@ class TaskDetail(TaskInDBBase):
         acl_list = []
 
         if self.owner:
-            acl_list.extend([
-                (Allow, f"user:{self.owner.id}", "view"),
-                (Allow, f"user:{self.owner.id}", "edit"),
-                (Allow, f"user:{self.owner.id}", "delete"),
-            ])
+            acl_list.extend(
+                [
+                    (Allow, f"user:{self.owner.id}", "view"),
+                    (Allow, f"user:{self.owner.id}", "edit"),
+                    (Allow, f"user:{self.owner.id}", "delete"),
+                ]
+            )
         else:
             acl_list.append((Allow, Authenticated, "delete"))  # TODO delete
 

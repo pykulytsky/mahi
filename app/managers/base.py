@@ -1,14 +1,15 @@
 from typing import Type
-from sqlmodel import Session, SQLModel, select
-from sqlalchemy.sql.elements import BinaryExpression
-from sqlalchemy.exc import MultipleResultsFound, NoResultFound
+
 from fastapi import Depends
+from sqlalchemy.exc import MultipleResultsFound, NoResultFound
+from sqlalchemy.sql.elements import BinaryExpression
+from sqlmodel import Session, SQLModel, select
 
-from app.db import get_session
 from app.core.exceptions import ObjectDoesNotExist
+from app.db import get_session
 
 
-class Manager():
+class Manager:
     model: Type[SQLModel] | None = SQLModel
     in_schema: Type[SQLModel] | None = SQLModel
 
@@ -62,13 +63,9 @@ class Manager():
         return res
 
     def filter(
-        self,
-        *expressions: list[BinaryExpression],
-        limit: int = 100,
-        offset: int = 0
+        self, *expressions: list[BinaryExpression], limit: int = 100, offset: int = 0
     ) -> list[model]:
-        stmt = select(self.model).where(
-            *expressions).offset(offset).limit(limit)
+        stmt = select(self.model).where(*expressions).offset(offset).limit(limit)
         res = self.session.exec(stmt).all()
         return res
 

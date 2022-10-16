@@ -1,14 +1,13 @@
 import jwt
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_permissions import Authenticated, Everyone, configure_permissions
 from pydantic import ValidationError
 
 from app import models, schemas
-from app.managers import UserManager
 from app.core import security
 from app.core.config import settings
+from app.managers import UserManager
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/access-token",
@@ -16,8 +15,7 @@ reusable_oauth2 = OAuth2PasswordBearer(
 
 
 def get_current_user(
-    token: str = Depends(reusable_oauth2),
-    manager: UserManager = Depends(UserManager)
+    token: str = Depends(reusable_oauth2), manager: UserManager = Depends(UserManager)
 ) -> models.User | None:
     try:
         payload = jwt.decode(

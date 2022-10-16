@@ -1,13 +1,15 @@
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
+
 from sqlmodel import Field, Relationship, SQLModel
+
 from app.models.base import Timestamped
 
 from .link_tables import Participant
 from .task import TaskRead
 
 if TYPE_CHECKING:
-    from app.models import User, Task, Section
+    from app.models import Section, Task, User
 
 
 class ProjectBase(SQLModel):

@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING
-from sqlmodel import SQLModel, Field, Relationship
-from pydantic import EmailStr
 
-from .link_tables import Participant, Assignee, UserReactionLink
+from pydantic import EmailStr
+from sqlmodel import Field, Relationship, SQLModel
+
+from .link_tables import Assignee, Participant, UserReactionLink
 
 if TYPE_CHECKING:
-    from app.models import Project, Task, Tag, Reaction
+    from app.models import Project, Reaction, Tag, Task
 
 
 class UserBase(SQLModel):
@@ -24,13 +25,15 @@ class User(UserBase, table=True):
     tags: list["Tag"] = Relationship(back_populates="owner")
     tasks: list["Task"] = Relationship(back_populates="owner")
     assigned_tasks: list["Task"] = Relationship(
-        back_populates="assigned_to", link_model=Assignee)
+        back_populates="assigned_to", link_model=Assignee
+    )
 
     participated_projects: list["Project"] = Relationship(
         back_populates="participants", link_model=Participant
     )
     reactions: list["Reaction"] = Relationship(
-        back_populates="users", link_model=UserReactionLink)
+        back_populates="users", link_model=UserReactionLink
+    )
 
 
 class UserCreate(UserBase):
@@ -44,9 +47,9 @@ class UserRead(UserBase):
 
 class UserReadDetail(UserBase):
     from app.models.project import ProjectRead
+    from app.models.reaction import ReactionRead
     from app.models.tag import TagRead
     from app.models.task import TaskRead
-    from app.models.reaction import ReactionRead
 
     projects: list[ProjectRead]
     participated_projects: list[ProjectRead]

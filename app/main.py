@@ -10,8 +10,8 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.api.api_v1.api import api_router
 from app.core.config import settings
-from app.sse.notifications import sse_router
 from app.db import create_tables
+from app.sse.notifications import sse_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"

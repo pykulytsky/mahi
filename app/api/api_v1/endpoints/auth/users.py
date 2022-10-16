@@ -3,8 +3,8 @@ from fastapi import Depends
 from app import schemas
 from app.api.deps import get_current_active_user
 from app.api.router import CrudRouter
-from app.models import User, UserCreate, UserRead, UserReadDetail, UserUpdate
 from app.managers import UserManager
+from app.models import User, UserCreate, UserRead, UserReadDetail, UserUpdate
 
 router = CrudRouter(
     model=User,

@@ -1,5 +1,6 @@
+from app.models import Project, ProjectCreate, ProjectRead
+
 from .base import Manager
-from app.models import Project, ProjectRead, ProjectCreate
 
 
 class ProjectManager(Manager):

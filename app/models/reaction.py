@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Optional
-from sqlmodel import SQLModel, Field, Relationship
+
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.link_tables import UserReactionLink
 
@@ -18,7 +19,8 @@ class Reaction(ReactionBase, table=True):
     task: Optional["Task"] = Relationship(back_populates="reactions")
 
     users: list["User"] = Relationship(
-        back_populates="reactions", link_model=UserReactionLink)
+        back_populates="reactions", link_model=UserReactionLink
+    )
 
 
 class ReactionCreate(ReactionBase):

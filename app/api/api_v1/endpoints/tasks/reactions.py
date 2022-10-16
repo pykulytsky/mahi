@@ -6,8 +6,7 @@ from fastapi_sqlalchemy import db
 from app import schemas
 from app.api.deps import get_current_active_user
 from app.core.exceptions import ObjectDoesNotExist
-from app.models import User
-from app.models import Task, Reaction
+from app.models import Reaction, Task, User
 
 router = APIRouter(prefix="/reactions", tags=["task"])
 
@@ -48,7 +47,7 @@ async def remove_reaction(
                     status_code=404, detail="No reactions according to user was found."
                 )
 
-            UserReaction.delete(user_reaction)
+            # UserReaction.delete(user_reaction)
             if len(r.users) == 0:
                 Reaction.delete(r)
             return Task.get(id=reaction.task_id)

@@ -251,9 +251,7 @@ class CrudRouter(BaseCrudRouter):
             )
 
     def _get_all(self) -> Callable:
-        async def route(
-            manager: self.Manager = Depends(self.Manager)
-        ):
+        async def route(manager: self.Manager = Depends(self.Manager)):
             return manager.all()
 
         return route
@@ -261,35 +259,30 @@ class CrudRouter(BaseCrudRouter):
     def _create(self) -> Callable:
         async def route(
             instance_create_schema: self.create_schema,
-            manager: self.Manager = Depends(self.Manager)
+            manager: self.Manager = Depends(self.Manager),
         ):
             return manager.create(instance_create_schema)
 
         return route
 
     def _get(self) -> Callable:
-        async def route(
-            id: int,
-            manager: self.Manager = Depends(self.Manager)
-        ):
+        async def route(id: int, manager: self.Manager = Depends(self.Manager)):
             return manager.get(id)
 
         return route
 
     def _update(self) -> Callable:
         async def route(
-            id, update_schema: self.update_schema,
-            manager: self.Manager = Depends(self.Manager)
+            id,
+            update_schema: self.update_schema,
+            manager: self.Manager = Depends(self.Manager),
         ):
             return manager.update(id, **update_schema.dict(exclude_unset=True))
 
         return route
 
     def _delete(self) -> Callable:
-        async def route(
-            id,
-            manager: self.Manager = Depends(self.Manager)
-        ):
+        async def route(id, manager: self.Manager = Depends(self.Manager)):
             return manager.delete(manager.get(id=id))
 
         return route
@@ -342,7 +335,7 @@ class AuthenticatedCrudRouter(CrudRouter):
         async def route(
             instance_create_schema: self.create_schema,
             user: models.User = Depends(get_current_active_user),
-            manager: self.Manager = Depends(self.Manager)
+            manager: self.Manager = Depends(self.Manager),
         ):
             if self.owner_field_is_required:
                 return manager.create(**dict(instance_create_schema), owner=user)

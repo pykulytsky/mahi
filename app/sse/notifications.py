@@ -5,7 +5,6 @@ import async_timeout
 from aioredis import Redis, client, exceptions
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi_plugins import depends_redis
-from sqlalchemy.orm import Session
 from sse_starlette.sse import EventSourceResponse
 
 from app.api import deps

@@ -1,11 +1,12 @@
-from typing import Optional, TYPE_CHECKING
-from sqlmodel import Field, SQLModel, Relationship
+from typing import TYPE_CHECKING, Optional
+
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.models import Timestamped
-from app.models.link_tables import TaskTagLink, Assignee
+from app.models.link_tables import Assignee, TaskTagLink
 
 if TYPE_CHECKING:
-    from app.models import Project, User, Section, Tag, Reaction
+    from app.models import Project, Reaction, Section, Tag, User
 
 
 class TaskBase(SQLModel):
@@ -21,14 +22,14 @@ class Task(TaskBase, Timestamped, table=True):
     project: Optional["Project"] = Relationship(back_populates="tasks")
     section_id: int | None = Field(default=None, foreign_key="section.id")
     section: Optional["Section"] = Relationship(back_populates="tasks")
-    tags: Optional["Tag"] = Relationship(
-        back_populates="tasks", link_model=TaskTagLink)
+    tags: Optional["Tag"] = Relationship(back_populates="tasks", link_model=TaskTagLink)
     reactions: list["Reaction"] = Relationship(back_populates="task")
 
     owner_id: int | None = Field(default=None, foreign_key="user.id")
     owner: Optional["User"] = Relationship(back_populates="tasks")
     assigned_to: list["User"] = Relationship(
-        back_populates="assigned_tasks", link_model=Assignee)
+        back_populates="assigned_tasks", link_model=Assignee
+    )
 
 
 class TaskCreate(TaskBase):
@@ -42,9 +43,9 @@ class TaskRead(TaskBase):
 
 
 class TaskReadDetail(TaskRead):
+    from app.models.reaction import ReactionRead
     from app.models.section import SectionRead
     from app.models.tag import TagRead
-    from app.models.reaction import ReactionRead
 
     section: SectionRead | None = None
     tags: list[TagRead]

@@ -1,15 +1,16 @@
 from datetime import datetime, timedelta
-import jwt
-from pydantic import EmailStr
-from passlib.hash import pbkdf2_sha256
 from typing import Type
 
-from app.core.exceptions import ObjectDoesNotExist
-from app.api.exceptions import WrongLoginCredentials
+import jwt
+from passlib.hash import pbkdf2_sha256
+from pydantic import EmailStr
 
-from app.models.user import UserCreate, UserRead, User
-from .base import Manager
+from app.api.exceptions import WrongLoginCredentials
 from app.core.config import settings
+from app.core.exceptions import ObjectDoesNotExist
+from app.models.user import User, UserCreate, UserRead
+
+from .base import Manager
 
 
 class UserManager(Manager):
