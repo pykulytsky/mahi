@@ -49,27 +49,33 @@ class Task(TaskBase, Timestamped, table=True):
         if self.project:
             for p in self.project.participants:
                 if p.id != self.id:
-                    acl_list.extend([
-                        (Allow, f"user:{p.id}", "view"),
-                        (Allow, f"user:{p.id}", "edit"),
-                        (Allow, f"user:{p.id}", "complete")
-                    ])
+                    acl_list.extend(
+                        [
+                            (Allow, f"user:{p.id}", "view"),
+                            (Allow, f"user:{p.id}", "edit"),
+                            (Allow, f"user:{p.id}", "complete"),
+                        ]
+                    )
         elif self.section:
             for p in self.section.project.participants:
                 if p.id != self.id:
-                    acl_list.extend([
-                        (Allow, f"user:{p.id}", "view"),
-                        (Allow, f"user:{p.id}", "edit"),
-                        (Allow, f"user:{p.id}", "complete")
-                    ])
+                    acl_list.extend(
+                        [
+                            (Allow, f"user:{p.id}", "view"),
+                            (Allow, f"user:{p.id}", "edit"),
+                            (Allow, f"user:{p.id}", "complete"),
+                        ]
+                    )
 
         for assignee in self.assigned_to:
-            acl_list.extend([
-                (Allow, f"user:{assignee.id}", "view"),
-                (Allow, f"user:{assignee.id}", "edit"),
-                (Allow, f"user:{assignee.id}", "complete"),
-                (Allow, f"user:{assignee.id}", "delete")
-            ])
+            acl_list.extend(
+                [
+                    (Allow, f"user:{assignee.id}", "view"),
+                    (Allow, f"user:{assignee.id}", "edit"),
+                    (Allow, f"user:{assignee.id}", "complete"),
+                    (Allow, f"user:{assignee.id}", "delete"),
+                ]
+            )
 
         return acl_list
 

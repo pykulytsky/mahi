@@ -4,8 +4,8 @@ from app.models.user import User
 
 from .base import Manager
 from .project import Project, ProjectManager
-from .section import SectionManager
 from .reaction import ReactionManager
+from .section import SectionManager
 
 
 class TaskManager(Manager):
@@ -68,6 +68,19 @@ class TaskManager(Manager):
                 return task
 
         reaction = ReactionManager(self.session).create(reaction)
+        reaction.users.append(user)
+        self.session.add(reaction)
         self.session.commit()
         self.session.refresh(task)
         return task
+
+    def remove_reaction(self, reaction: ReactionCreate, user: User):
+        task = self.get(id=reaction.task_id)
+        for r in task.reactions:
+            if reaction.emoji == r.emoji:
+                r.users.remove(user)
+                if len(r.users) == 0:
+                    ReactionManager(self.session).delete(r)
+                self.session.commit()
+                self.session.refresh(task)
+                return task

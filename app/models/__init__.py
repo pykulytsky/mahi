@@ -6,7 +6,13 @@ from .project import (
     ProjectReadDetail,
     ProjectUpdate,
 )
-from .reaction import Reaction, ReactionCreate, ReactionRead, ReactionReadDetail, ReactionUpdate
+from .reaction import (
+    Reaction,
+    ReactionCreate,
+    ReactionRead,
+    ReactionReadDetail,
+    ReactionUpdate,
+)
 from .section import (
     Section,
     SectionCreate,
