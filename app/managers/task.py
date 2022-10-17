@@ -1,8 +1,11 @@
 from app.models import Task, TaskCreate
+from app.models.reaction import ReactionCreate
+from app.models.user import User
 
 from .base import Manager
 from .project import Project, ProjectManager
 from .section import SectionManager
+from .reaction import ReactionManager
 
 
 class TaskManager(Manager):
@@ -53,3 +56,18 @@ class TaskManager(Manager):
             if task.order > instance.order:
                 self.update(task.id, order=task.order - 1)
         return super().delete(instance)
+
+    def add_reaction(self, reaction: ReactionCreate, user: User):
+        task = self.get(id=reaction.task_id)
+        for r in task.reactions:
+            if reaction.emoji == r.emoji:
+                r.users.append(user)
+                self.db.add(r)
+                self.session.commit()
+                self.session.refresh(r)
+                return task
+
+        reaction = ReactionManager(self.session).create(reaction)
+        self.session.commit()
+        self.session.refresh(task)
+        return task

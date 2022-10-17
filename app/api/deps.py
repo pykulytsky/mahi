@@ -57,7 +57,7 @@ def get_current_verified_user(
     return current_user
 
 
-def get_active_user_principals(user: schemas.User = Depends(get_current_active_user)):
+def get_active_user_principals(user: models.User = Depends(get_current_active_user)):
     if user:
         # user is logged in
         principals = [Everyone, Authenticated]

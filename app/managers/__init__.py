@@ -4,3 +4,4 @@ from .section import SectionManager
 from .tag import TagManager
 from .task import TaskManager
 from .user import UserManager
+from .reaction import ReactionManager

@@ -1,39 +1,27 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi_sqlalchemy import db
 
-from app import schemas
 from app.api.deps import get_current_active_user
 from app.core.exceptions import ObjectDoesNotExist
-from app.models import Reaction, Task, User
+from app.models import Reaction, Task, User, TaskReadDetail, ReactionCreate
+from app.managers import TaskManager
 
 router = APIRouter(prefix="/reactions", tags=["task"])
 
 
-@router.post("/", response_model=schemas.Task)
+@router.post("/", response_model=TaskReadDetail)
 async def add_reaction(
-    reaction: schemas.ReactionCreate,
+    reaction: ReactionCreate,
     user: User = Depends(get_current_active_user),
+    task_manager: TaskManager = Depends(TaskManager)
 ):
-    task = Task.get(id=reaction.task_id)
-    for r in task.reactions:
-        if reaction.emoji == r.emoji:
-            # UserReaction.create(user_id=user.id, reaction_id=r.id)
-            db.session.commit()
-            db.session.refresh(task)
-            return Task.get(id=reaction.task_id)
-
-    reaction = Reaction.create(emoji=reaction.emoji, task_id=reaction.task_id)
-    # UserReaction.create(user_id=user.id, reaction_id=reaction.id)
-    db.session.commit()
-    db.session.refresh(task)
-    return Task.get(id=reaction.task_id)
+    return task_manager.add_reaction(reaction, user)
 
 
-@router.post("/remove", response_model=Optional[schemas.Task])
+@router.post("/remove", response_model=Optional[TaskReadDetail])
 async def remove_reaction(
-    reaction: schemas.ReactionCreate,
+    reaction: ReactionCreate,
     user: User = Depends(get_current_active_user),
 ):
     task = Task.get(id=reaction.task_id)
