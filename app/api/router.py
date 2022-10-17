@@ -12,6 +12,7 @@ from app import models
 from app.api.deps import get_current_active_user
 from app.core.exceptions import ImproperlyConfigured
 from app.managers import Manager
+from app.api.deps import Permission
 
 
 class BaseCrudRouter(APIRouter):
@@ -402,5 +403,102 @@ class AuthenticatedCrudRouter(CrudRouter):
         return route
 
 
-class PermissionedCrudRouter(CrudRouter):
-    pass
+class PermissionedCrudRouter(AuthenticatedCrudRouter):
+    """Router with permissions system using fastapi-permissions, to use it provide __acl__ method to your SQLModel model."""
+
+    def __init__(
+        self,
+        model,
+        get_schema: Type[BaseModel],
+        create_schema: Type[BaseModel],
+        manager: Type[Manager] = Manager,
+        detail_schema: Type[BaseModel] | None = None,
+        update_schema: Type[BaseModel] | None = None,
+        prefix: Optional[str] = None,
+        tags: Optional[List] = [],
+        add_create_route: bool = False,
+        owner_field_is_required: bool = False,
+        *args,
+        **kwargs,
+    ) -> None:
+        self.owner_field_is_required = owner_field_is_required
+
+        super().__init__(
+            model=model,
+            manager=manager,
+            get_schema=get_schema,
+            create_schema=create_schema,
+            update_schema=update_schema,
+            detail_schema=detail_schema,
+            prefix=prefix,
+            tags=tags,
+            add_create_route=add_create_route,
+            *args,
+            **kwargs,
+        )
+
+        super().add_api_route(
+            "/{id}",
+            self._get(),
+            methods=["GET"],
+            response_model=self.detail_schema,
+            summary=f"Get {self.model.__name__}",
+            status_code=200,
+        )
+
+        super().add_api_route(
+            "/{id}",
+            self._update(),
+            methods=["PATCH"],
+            response_model=self.detail_schema,
+            summary=f"Patch {self.model.__name__}",
+            status_code=200,
+        )
+
+        super().add_api_route(
+            "/{id}",
+            self._delete(),
+            methods=["DELETE"],
+            summary=f"Delete {self.model.__name__}",
+            status_code=204,
+        )
+
+    def _get_item(self):
+        def func(id: int, manager: self.Manager = Depends(self.Manager)):
+            return manager.get(id)
+
+        return func
+
+    def _get(self) -> Callable:
+        get_item_from_db = self._get_item()
+
+        async def route(
+            item: self.model = Permission("view", get_item_from_db),
+        ):
+            return item
+
+        return route
+
+    def _update(self) -> Callable:
+        get_item_from_db = self._get_item()
+
+        async def route(
+            id,
+            update_schema: self.update_schema,
+            _: self.model = Permission("edit", get_item_from_db),
+            manager: self.Manager = Depends(self.Manager),
+        ):
+            return manager.update(id, **update_schema.dict(exclude_unset=True))
+
+        return route
+
+    def _delete(self) -> Callable:
+        get_item_from_db = self._get_item()
+
+        async def route(
+            item: self.model = Permission("delete", get_item_from_db),
+            manager: self.Manager = Depends(self.Manager),
+        ):
+            return manager.delete(item)
+
+        return route

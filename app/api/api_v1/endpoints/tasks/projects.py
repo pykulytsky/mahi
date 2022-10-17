@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException
 from fastapi_sqlalchemy import db
 
 from app.api.deps import Permission, get_current_active_user
-from app.api.router import AuthenticatedCrudRouter
+from app.api.router import PermissionedCrudRouter
 from app.managers import ProjectManager
 from app.models import (
     Project,
@@ -15,7 +15,7 @@ from app.models import (
     User,
 )
 
-router = AuthenticatedCrudRouter(
+router = PermissionedCrudRouter(
     model=Project,
     manager=ProjectManager,
     get_schema=ProjectRead,
@@ -26,28 +26,6 @@ router = AuthenticatedCrudRouter(
     tags=["task"],
     owner_field_is_required=True,
 )
-
-
-def get_project_from_db(id, manager: ProjectManager = Depends(ProjectManager)):
-    return manager.get(id)
-
-
-@router.get("/{id}", response_model=ProjectReadDetail)
-async def get_project(project: Project = Permission("view", get_project_from_db)):
-    return project
-
-
-@router.patch("/{id}", response_model=ProjectReadDetail)
-async def update_project(
-    update_schema: ProjectUpdate,
-    project: Project = Permission("edit", get_project_from_db),
-):
-    return Project.update(id=project.id, **update_schema.dict(exclude_unset=True))
-
-
-@router.delete("/{id}")
-async def delete_project(project: Project = Permission("edit", get_project_from_db)):
-    return Project.delete(Project.get(id=project.id))
 
 
 @router.get("/user/", response_model=list[ProjectRead])
@@ -77,7 +55,7 @@ async def get_tasks_by_project(
 
 @router.get("/{id}/invite")
 async def get_invitation_code(
-    project: Project = Permission("invite", get_project_from_db),
+    project: Project = Permission("invite", router._get_item()),
 ):
     return {"code": Project.generate_invitaion_code(project.id)}
 
@@ -99,6 +77,6 @@ async def accept_invitation(code: str, user: User = Depends(get_current_active_u
 
 @router.get("/{id}/direct-invite")
 async def send_direct_invitation(
-    project: Project = Permission("invite", get_project_from_db),
+    project: Project = Permission("invite", router._get_item()),
 ):
     pass
