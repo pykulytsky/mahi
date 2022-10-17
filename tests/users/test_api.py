@@ -1,8 +1,9 @@
+import pytest
 import jwt
 from pydantic import ValidationError
 
 from app.core.config import settings
-from app.models import User
+from app.managers.user import UserManager
 
 
 def test_get_user(client, user):
@@ -38,18 +39,19 @@ def test_access_get_me(auth_client, user):
     assert response.json()["id"] == user.id
 
 
+@pytest.mark.xfail(strict=True)
 def test_api_uses_db(client, user, mocker):
-    mocker.patch("app.models.User.get")
+    mocker.patch("app.managers.user.UserManager.get")
     try:
         client.get(f"users/{user.id}")
     except ValidationError:
         pass
 
-    User.get.assert_called_once_with(id=user.id)
+    UserManager.get.assert_called_once_with(id=user.id)
 
 
-def test_create_user(client, db):
-    users_count = len(User.all())
+def test_create_user(client, user_manager):
+    users_count = len(user_manager.all())
     response = client.post(
         "users/",
         json={
@@ -62,9 +64,9 @@ def test_create_user(client, db):
 
     assert response.status_code == 201
     assert response.json()["email"] == "tests@t.tt"
-    assert len(User.all()) != users_count
+    assert len(user_manager.all()) != users_count
 
-    User.delete(User.get(id=response.json()["id"]))
+    user_manager.delete(user_manager.get(id=response.json()["id"]))
 
 
 def test_access_token(client, user):

@@ -2,78 +2,93 @@ from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from fastapi_sqlalchemy import db as DB
+from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel.pool import StaticPool
 
-from app.db.base import Base
-from app.db.session import engine
+from app.db import get_session
 from app.main import app
-from app.models import User
+from app.managers.user import UserManager
+from app.models.user import UserCreate
 
 from .test_client import JWTAuthTestClient
 
 
-@pytest.fixture(autouse=True, scope="session")
-def create_models():
-    Base.metadata.create_all(bind=engine)
-
-
 @pytest.fixture(scope="session")
-def client():
+def client(db):
+    def get_session_override():
+        return db
+
+    app.dependency_overrides[get_session] = get_session_override
+
     return TestClient(app, base_url="http://testserver/api/v1/")
 
 
 @pytest.fixture(autouse=True, scope="session")
 def db():
-    with DB() as session:
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
         yield session
 
 
 @pytest.fixture(scope="session")
-def user(db):
-    user = User.create(
+def user_manager(db):
+    return UserManager(db)
+
+
+@pytest.fixture(scope="session")
+def user_schema():
+    return UserCreate(
         email="test3@test.py",
         email_verified=True,
         first_name="Test",
         last_name="Testov",
         password="1234",
     )
-    yield user
-    User.delete(user)
 
 
-@pytest.fixture
-def journal(user):
-    return user.journal
-
-
-@pytest.fixture()
-def another_user(db):
-    user = User.create(
+@pytest.fixture(scope="session")
+def another_user_schema():
+    return UserCreate(
         email="test4@test.py",
         first_name="Test",
         last_name="Testov",
         password="1234",
     )
+
+
+@pytest.fixture(scope="session")
+def user(user_manager, user_schema):
+    user = user_manager.create(user_schema)
     yield user
-    User.delete(user)
+    user_manager.delete(user)
 
 
 @pytest.fixture()
-def auth_client(db, user):
-    return JWTAuthTestClient(app, user=user, db=db)
+def another_user(user_manager, another_user_schema):
+    user = user_manager.create(another_user_schema)
+    yield user
+    user_manager.delete(user)
 
 
 @pytest.fixture
-def token(db, user):
+def token(user, user_manager):
     access_token_expires = timedelta(minutes=99999)
-    return User.generate_access_token(
+    return user_manager.generate_access_token(
         subject=user.id, expires_delta=access_token_expires
     )
 
 
 @pytest.fixture
-def another_token(db, another_user):
+def another_token(another_user, user_manager):
     access_token_expires = timedelta(minutes=99999)
-    return User.generate_access_token(
+    return user_manager.generate_access_token(
         subject=another_user.id, expires_delta=access_token_expires
     )
+
+
+@pytest.fixture()
+def auth_client(token):
+    return JWTAuthTestClient(app, token=token)

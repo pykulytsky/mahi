@@ -16,6 +16,7 @@ class UserBase(SQLModel):
     last_name: str
 
     avatar: str | None = Field(default=None)
+    email_verified: bool = Field(default=False)
 
 
 class User(UserBase, table=True):

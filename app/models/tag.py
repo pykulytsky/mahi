@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, Optional
-
+from fastapi_permissions import Allow
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.models import Timestamped
@@ -23,6 +23,13 @@ class Tag(TagBase, Timestamped, table=True):
     tasks: Optional["Task"] = Relationship(
         back_populates="tags", link_model=TaskTagLink
     )
+
+    def __acl__(self):
+        return [
+            (Allow, f"user:{self.owner_id}", "view"),
+            (Allow, f"user:{self.owner_id}", "edit"),
+            (Allow, f"user:{self.owner_id}", "delete"),
+        ]
 
 
 class TagCreate(TagBase):

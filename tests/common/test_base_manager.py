@@ -1,21 +1,12 @@
 import pytest
 
 
-class SomeClass:
-    pass
-
-
 def test_manager_all(manager, user):
     assert user in manager.all()
 
 
 def test_manager_get(user, manager):
     assert manager.get(id=user.id) == user
-
-
-def test_use_unsuported_fields(user, manager):
-    with pytest.raises(ValueError):
-        manager.get(wrong_field_name="")
 
 
 def test_get_with_multiply_fields(manager, user):
