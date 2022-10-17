@@ -3,6 +3,7 @@ import time
 
 import aioredis
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi_plugins import redis_plugin
 from sse_starlette.sse import EventSourceResponse
@@ -10,6 +11,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.api.api_v1.api import api_router
 from app.core.config import settings
+from app.core.exceptions import ObjectDoesNotExist
 from app.db import create_tables
 from app.sse.notifications import sse_router
 
@@ -18,6 +20,11 @@ app = FastAPI(
 )
 
 app.mount("/static/", StaticFiles(directory="app/static"), name="static")
+
+
+@app.exception_handler(ObjectDoesNotExist)
+async def object_not_found_handler(request: Request, exc: ObjectDoesNotExist):
+    return JSONResponse(status_code=404, content={"detail": exc.message})
 
 
 if settings.BACKEND_CORS_ORIGINS:

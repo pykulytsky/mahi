@@ -5,7 +5,7 @@ from sqlmodel import Field, Relationship, SQLModel
 from app.models import Timestamped
 
 if TYPE_CHECKING:
-    from app.models import Project, Task
+    from app.models import Project, Task, User
 
 
 class SectionBase(SQLModel):
@@ -16,6 +16,9 @@ class SectionBase(SQLModel):
 class Section(SectionBase, Timestamped, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
+    owner_id: int | None = Field(default=None, foreign_key="user.id")
+    owner: Optional["User"] = Relationship(back_populates="sections")
+
     project_id: int | None = Field(default=False, foreign_key="project.id")
     project: Optional["Project"] = Relationship(back_populates="sections")
 
@@ -24,6 +27,7 @@ class Section(SectionBase, Timestamped, table=True):
 
 class SectionCreate(SectionBase):
     project_id: int
+    owner_id: int | None = None
     order: int | None = None
 
 

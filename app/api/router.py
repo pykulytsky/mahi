@@ -294,9 +294,9 @@ class AuthenticatedCrudRouter(CrudRouter):
     def __init__(
         self,
         model,
-        # manager: Type[Manager],
         get_schema: Type[BaseModel],
         create_schema: Type[BaseModel],
+        manager: Type[Manager] = Manager,
         detail_schema: Type[BaseModel] | None = None,
         update_schema: Type[BaseModel] | None = None,
         prefix: Optional[str] = None,
@@ -310,7 +310,7 @@ class AuthenticatedCrudRouter(CrudRouter):
 
         super().__init__(
             model=model,
-            manager=Manager,
+            manager=manager,
             get_schema=get_schema,
             create_schema=create_schema,
             update_schema=update_schema,
@@ -331,6 +331,42 @@ class AuthenticatedCrudRouter(CrudRouter):
             status_code=201,
         )
 
+        super().add_api_route(
+            "/{id}",
+            self._get(),
+            methods=["GET"],
+            response_model=self.detail_schema,
+            summary=f"Get {self.model.__name__}",
+            status_code=200,
+        )
+
+        super().add_api_route(
+            "/{id}",
+            self._update(),
+            methods=["PATCH"],
+            response_model=self.detail_schema,
+            summary=f"Patch {self.model.__name__}",
+            status_code=200,
+        )
+
+        super().add_api_route(
+            "/{id}",
+            self._delete(),
+            methods=["DELETE"],
+            summary=f"Delete {self.model.__name__}",
+            status_code=204,
+        )
+
+    def _get(self) -> Callable:
+        async def route(
+            id: int,
+            _: models.User = Depends(get_current_active_user),
+            manager: self.Manager = Depends(self.Manager),
+        ):
+            return manager.get(id)
+
+        return route
+
     def _create(self) -> Callable:
         async def route(
             instance_create_schema: self.create_schema,
@@ -338,10 +374,30 @@ class AuthenticatedCrudRouter(CrudRouter):
             manager: self.Manager = Depends(self.Manager),
         ):
             if self.owner_field_is_required:
-                return manager.create(**dict(instance_create_schema), owner=user)
-            return manager.create(
-                **dict(instance_create_schema),
-            )
+                instance_create_schema.owner_id = user.id
+
+            return manager.create(instance_create_schema)
+
+        return route
+
+    def _update(self) -> Callable:
+        async def route(
+            id,
+            update_schema: self.update_schema,
+            _: models.User = Depends(get_current_active_user),
+            manager: self.Manager = Depends(self.Manager),
+        ):
+            return manager.update(id, **update_schema.dict(exclude_unset=True))
+
+        return route
+
+    def _delete(self) -> Callable:
+        async def route(
+            id,
+            _: models.User = Depends(get_current_active_user),
+            manager: self.Manager = Depends(self.Manager),
+        ):
+            return manager.delete(manager.get(id=id))
 
         return route
 

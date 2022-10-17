@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
+from fastapi_permissions import Allow
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.base import Timestamped
@@ -37,9 +38,22 @@ class Project(ProjectBase, Timestamped, table=True):
     tasks: list["Task"] = Relationship(back_populates="project")
     sections: list["Section"] = Relationship(back_populates="project")
 
+    def __acl__(self):
+        acl_list = [
+            (Allow, f"user:{self.owner_id}", "view"),
+            (Allow, f"user:{self.owner_id}", "invite"),
+            (Allow, f"user:{self.owner_id}", "edit"),
+            (Allow, f"user:{self.owner_id}", "delete"),
+        ]
+        for p in self.participants:
+            acl_list.append((Allow, f"user:{p.id}", "view"))
+            acl_list.append((Allow, f"user:{p.id}", "edit"))
+
+        return acl_list
+
 
 class ProjectCreate(ProjectBase):
-    pass
+    owner_id: int | None = None
 
 
 class ProjectRead(ProjectBase):

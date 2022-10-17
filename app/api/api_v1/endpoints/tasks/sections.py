@@ -12,6 +12,7 @@ router = AuthenticatedCrudRouter(
     update_schema=section.SectionUpdate,
     prefix="/sections",
     tags=["task"],
+    owner_field_is_required=True,
 )
 
 

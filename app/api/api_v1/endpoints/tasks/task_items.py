@@ -15,6 +15,7 @@ router = AuthenticatedCrudRouter(
     update_schema=schemas.TaskUpdate,
     prefix="/tasks",
     tags=["task"],
+    owner_field_is_required=True,
 )
 
 

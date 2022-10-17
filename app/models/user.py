@@ -1,3 +1,4 @@
+import uuid
 from typing import TYPE_CHECKING
 
 from pydantic import EmailStr
@@ -6,7 +7,7 @@ from sqlmodel import Field, Relationship, SQLModel
 from .link_tables import Assignee, Participant, UserReactionLink
 
 if TYPE_CHECKING:
-    from app.models import Project, Reaction, Tag, Task
+    from app.models import Project, Reaction, Section, Tag, Task
 
 
 class UserBase(SQLModel):
@@ -14,14 +15,20 @@ class UserBase(SQLModel):
     first_name: str
     last_name: str
 
+    avatar: str | None = Field(default=None)
+
 
 class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
     password: str
     is_active: bool = Field(default=True)
+    is_superuser: bool = Field(default=False)
+
+    verification_code: uuid.UUID = Field(default=uuid.uuid4())
 
     projects: list["Project"] = Relationship(back_populates="owner")
+    sections: list["Section"] = Relationship(back_populates="owner")
     tags: list["Tag"] = Relationship(back_populates="owner")
     tasks: list["Task"] = Relationship(back_populates="owner")
     assigned_tasks: list["Task"] = Relationship(
@@ -43,13 +50,16 @@ class UserCreate(UserBase):
 class UserRead(UserBase):
     id: int
     is_active: bool
+    is_superuser: bool
 
 
-class UserReadDetail(UserBase):
+class UserReadDetail(UserRead):
     from app.models.project import ProjectRead
     from app.models.reaction import ReactionRead
     from app.models.tag import TagRead
     from app.models.task import TaskRead
+
+    verification_code: uuid.UUID
 
     projects: list[ProjectRead]
     participated_projects: list[ProjectRead]

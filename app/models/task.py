@@ -36,6 +36,7 @@ class TaskCreate(TaskBase):
     order: int | None = None
     project_id: int | None = None
     section_id: int | None = None
+    owner_id: int | None = None
 
 
 class TaskRead(TaskBase):
