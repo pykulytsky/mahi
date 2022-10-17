@@ -1,9 +1,9 @@
 import pytest
+
 from app.managers.project import ProjectManager
 from app.managers.section import SectionManager
 from app.managers.tag import TagManager
 from app.managers.task import TaskManager
-
 from app.models.project import ProjectCreate
 from app.models.section import SectionCreate
 from app.models.tag import TagCreate

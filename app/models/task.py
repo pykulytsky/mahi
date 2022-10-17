@@ -2,8 +2,8 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING, Optional
 
 from fastapi_permissions import Allow
-from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import event
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.models import Timestamped
 from app.models.link_tables import Assignee, TaskTagLink

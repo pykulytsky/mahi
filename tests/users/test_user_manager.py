@@ -2,7 +2,7 @@ import pytest
 
 from app.api.exceptions import WrongLoginCredentials
 from app.managers.user import UserManager
-from app.models.user import User, UserCreate
+from app.models.user import UserCreate
 
 
 def test_create_user(user_manager):

@@ -4,8 +4,8 @@ import pytest
 from fastapi import APIRouter
 
 from app.api.router import CrudRouter
-from app.models import Task, TaskCreate, TaskRead, TaskReadDetail
 from app.managers import TaskManager
+from app.models import Task, TaskCreate, TaskRead, TaskReadDetail
 
 
 class SomeClass:
@@ -59,7 +59,7 @@ def test_routes_were_created_without_adding_create_route(mocker):
         create_schema=TaskCreate,
         detail_schema=TaskReadDetail,
         prefix="/test",
-        add_create_route=False
+        add_create_route=False,
     )
     assert APIRouter.add_api_route.call_count == 4
 

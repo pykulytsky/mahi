@@ -57,8 +57,12 @@ def test_reorder_isnt_performed_by_deleting_higher_task(section, task_manager):
 
 
 def test_reorder_from_section_to_project(section, task_manager, project):
-    section_task = task_manager.create(TaskCreate(name="Test task", section_id=section.id))
-    project_task = task_manager.create(TaskCreate(name="Test task", project_id=project.id))
+    section_task = task_manager.create(
+        TaskCreate(name="Test task", section_id=section.id)
+    )
+    project_task = task_manager.create(
+        TaskCreate(name="Test task", project_id=project.id)
+    )
 
     assert section_task.order == project_task.order == 0
 
@@ -75,8 +79,12 @@ def test_reorder_from_section_to_project(section, task_manager, project):
 
 
 def test_reorder_from_project_to_section(section, task_manager, project):
-    section_task = task_manager.create(TaskCreate(name="Test task", section_id=section.id))
-    project_task = task_manager.create(TaskCreate(name="Test task", project_id=project.id))
+    section_task = task_manager.create(
+        TaskCreate(name="Test task", section_id=section.id)
+    )
+    project_task = task_manager.create(
+        TaskCreate(name="Test task", project_id=project.id)
+    )
 
     assert section_task.order == project_task.order == 0
 

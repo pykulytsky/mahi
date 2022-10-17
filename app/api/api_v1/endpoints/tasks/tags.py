@@ -2,8 +2,8 @@ from fastapi import Depends
 
 from app.api.deps import get_current_active_user
 from app.api.router import PermissionedCrudRouter
-from app.models import Tag, User, TagCreate, TagRead, TagReadDetail, TagUpdate
 from app.managers import TagManager
+from app.models import Tag, TagCreate, TagRead, TagReadDetail, TagUpdate, User
 
 router = PermissionedCrudRouter(
     model=Tag,
@@ -21,6 +21,6 @@ router = PermissionedCrudRouter(
 @router.get("/user/", response_model=list[TagRead])
 async def get_user_tags(
     user: User = Depends(get_current_active_user),
-    manager: TagManager = Depends(TagManager)
+    manager: TagManager = Depends(TagManager),
 ):
     return manager.filter(Tag.owner_id == user.id)

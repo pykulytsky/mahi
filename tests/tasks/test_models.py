@@ -1,7 +1,6 @@
-import pytest
 from datetime import datetime, timedelta
 
-from app.models import Task, TaskCreate
+from app.models import TaskCreate
 
 
 def test_task_update_completed_at_when_tash_is_been_completed(task_manager, project):
@@ -18,7 +17,9 @@ def test_task_update_completed_at_when_tash_is_been_completed(task_manager, proj
 
 
 def test_uncomplete_task(task_manager, project):
-    task = task_manager.create(TaskCreate(name="Test task", project_id=project.id, is_completed=True))
+    task = task_manager.create(
+        TaskCreate(name="Test task", project_id=project.id, is_completed=True)
+    )
 
     updated_task = task_manager.update(task.id, is_completed=False)
 

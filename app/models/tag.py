@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Optional
+
 from fastapi_permissions import Allow
 from sqlmodel import Field, Relationship, SQLModel
 

@@ -1,7 +1,7 @@
 from app.models import Task, TaskCreate
 
 from .base import Manager
-from .project import ProjectManager, Project
+from .project import Project, ProjectManager
 from .section import SectionManager
 
 

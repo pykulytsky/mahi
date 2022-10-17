@@ -12,19 +12,35 @@ def test_manager_get(user, manager):
 
 
 def test_get_with_multiply_fields(manager, user):
-    assert manager.one(User.id == user.id, User.email == user.email, User.first_name == user.first_name) == user
+    assert (
+        manager.one(
+            User.id == user.id,
+            User.email == user.email,
+            User.first_name == user.first_name,
+        )
+        == user
+    )
 
 
 def test_filter(manager, user):
     assert (
-        manager.filter(User.id == user.id, User.email == user.email, User.first_name == user.first_name)[0]
+        manager.filter(
+            User.id == user.id,
+            User.email == user.email,
+            User.first_name == user.first_name,
+        )[0]
         == user
     )
 
 
 def test_create(manager):
     user = manager.create(
-        UserCreate(email="world@hello.com", password="!!!", first_name="test", last_name="tetest")
+        UserCreate(
+            email="world@hello.com",
+            password="!!!",
+            first_name="test",
+            last_name="tetest",
+        )
     )
 
     assert manager.exists(User.email == "world@hello.com", User.first_name == "test")

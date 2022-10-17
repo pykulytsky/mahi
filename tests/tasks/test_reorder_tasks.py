@@ -56,7 +56,9 @@ def test_reorder_isnt_performed_by_deleting_higher_task(project, task_manager):
 
 def test_create_task_with_custom_order(task_manager, project):
     new_task = task_manager.create(TaskCreate(name="Test task", project_id=project.id))
-    another = task_manager.create(TaskCreate(name="Test task", project_id=project.id, order=new_task.order + 1))
+    another = task_manager.create(
+        TaskCreate(name="Test task", project_id=project.id, order=new_task.order + 1)
+    )
     new = task_manager.get(id=new_task.id)
 
     assert new.order == 0

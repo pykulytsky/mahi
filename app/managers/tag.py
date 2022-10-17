@@ -1,5 +1,6 @@
-from .base import Manager
 from app.models import Tag, TagCreate, TagRead
+
+from .base import Manager
 
 
 class TagManager(Manager):
