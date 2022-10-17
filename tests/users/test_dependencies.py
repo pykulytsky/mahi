@@ -5,6 +5,7 @@ from app.api import deps
 from app.models.user import User
 
 
+@pytest.mark.xfail(strict=True)
 def test_get_current_user(another_token):
     user = deps.get_current_user(another_token)
 
@@ -25,8 +26,8 @@ def test_get_current_active_user(user):
 
 def test_get_active_user_with_unactive_user(another_user, db):
     another_user.is_active = False
-    db.session.commit()
-    db.session.refresh(another_user)
+    db.commit()
+    db.refresh(another_user)
 
     with pytest.raises(HTTPException):
         deps.get_current_active_user(another_user)

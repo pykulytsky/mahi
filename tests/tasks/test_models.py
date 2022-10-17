@@ -1,28 +1,27 @@
+import pytest
 from datetime import datetime, timedelta
 
-from app.models import Task
+from app.models import Task, TaskCreate
 
 
-def test_task_update_done_at_when_tash_is_been_completed(db, project):
-    task = Task.create(name="Test task", project_id=project.id)
+def test_task_update_completed_at_when_tash_is_been_completed(task_manager, project):
+    task = task_manager.create(TaskCreate(name="Test task", project_id=project.id))
 
-    assert task.done_at is None
+    assert task.completed_at is None
 
-    updated_task = Task.update(task.id, is_done=True)
+    updated_task = task_manager.update(task.id, is_completed=True)
 
-    assert updated_task.done_at is not None
-    assert abs(updated_task.done_at - datetime.now()) < timedelta(seconds=10)
+    assert updated_task.completed_at is not None
+    assert abs(updated_task.completed_at - datetime.now()) < timedelta(seconds=10)
 
-    Task.delete(updated_task)
+    task_manager.delete(updated_task)
 
 
-def test_uncomplete_task(db, project):
-    task = Task.create(name="Test task", project_id=project.id, is_done=True)
+def test_uncomplete_task(task_manager, project):
+    task = task_manager.create(TaskCreate(name="Test task", project_id=project.id, is_completed=True))
 
-    assert task.done_at is not None
+    updated_task = task_manager.update(task.id, is_completed=False)
 
-    updated_task = Task.update(task.id, is_done=False)
+    assert updated_task.completed_at is None
 
-    assert updated_task.done_at is None
-
-    Task.delete(updated_task)
+    task_manager.delete(updated_task)

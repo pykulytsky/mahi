@@ -1,8 +1,9 @@
-from datetime import date
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Optional
 
 from fastapi_permissions import Allow
 from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy import event
 
 from app.models import Timestamped
 from app.models.link_tables import Assignee, TaskTagLink
@@ -14,12 +15,14 @@ if TYPE_CHECKING:
 class TaskBase(SQLModel):
     name: str = Field(index=True)
     description: str | None = Field(default=None)
-    order: int = Field(index=True, default=0)
+    order: int | None = Field(index=True, default=0)
     deadline: date | None = Field(default=None)
+    is_completed: bool = Field(default=False)
 
 
 class Task(TaskBase, Timestamped, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    completed_at: datetime | None = Field(default=None)
 
     project_id: int | None = Field(default=None, foreign_key="project.id")
     project: Optional["Project"] = Relationship(back_populates="tasks")
@@ -89,3 +92,13 @@ class TaskReorder(SQLModel):
     destination_id: int
     destination_type: str
     order: int
+
+
+@event.listens_for(Task.is_completed, "set")
+def track_task_completion(target, value, oldvalue, initiator):
+    """Updates completed_at field when task is being done. Is used to track productivity at dashboard."""
+    if value != oldvalue:
+        if value:
+            target.completed_at = datetime.now()
+        else:
+            target.completed_at = None

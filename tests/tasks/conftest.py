@@ -1,9 +1,11 @@
 import pytest
 from app.managers.project import ProjectManager
+from app.managers.section import SectionManager
 from app.managers.tag import TagManager
 from app.managers.task import TaskManager
 
 from app.models.project import ProjectCreate
+from app.models.section import SectionCreate
 from app.models.tag import TagCreate
 from app.models.task import TaskCreate
 
@@ -23,6 +25,23 @@ def project(project_manager, project_schema):
     project = project_manager.create(project_schema)
     yield project
     project_manager.delete(project)
+
+
+@pytest.fixture
+def section_manager(db):
+    return SectionManager(db)
+
+
+@pytest.fixture
+def section_schema(project, user):
+    return SectionCreate(name="Test section", project_id=project.id, owner_id=user.id)
+
+
+@pytest.fixture
+def section(section_manager, section_schema):
+    section = section_manager.create(section_schema)
+    yield section
+    section_manager.delete(section)
 
 
 @pytest.fixture

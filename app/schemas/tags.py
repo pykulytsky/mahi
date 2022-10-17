@@ -8,7 +8,7 @@ class TaskBase(BaseModel):
     deadline: date | None = None
     name: str | None = None
     priority: str | None = None
-    done_at: datetime | None = None
+    completed_at: datetime | None = None
     color: str | None = None
 
 
@@ -18,12 +18,12 @@ class TaskCreate(TaskBase):
 
 
 class TaskUpdate(TaskBase):
-    is_done: bool | None = True
+    is_completed: bool | None = True
 
 
 class TaskInDBBase(TaskBase):
     id: int | None = None
-    is_done: bool
+    is_completed: bool
     created: datetime
     updated: datetime
 

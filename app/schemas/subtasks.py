@@ -11,4 +11,4 @@ class SubtaskCreate(SubtaskBase):
 
 
 class SubtaskUpdate(SubtaskBase):
-    is_done: bool | None = True
+    is_completed: bool | None = True

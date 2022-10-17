@@ -12,7 +12,7 @@ class TaskBase(BaseModel):
     deadline: date | None = None
     name: str | None = None
     priority: str | None = None
-    done_at: datetime | None = None
+    completed_at: datetime | None = None
     color: str | None = None
     is_important: bool | None = False
     remind_at: datetime | None = None
@@ -27,14 +27,14 @@ class TaskCreate(TaskBase):
 
 
 class TaskUpdate(TaskBase):
-    is_done: bool | None = True
+    is_completed: bool | None = True
     project_id: int | None = None
     section_id: int | None = None
 
 
 class TaskInDBBase(TaskBase):
     id: int | None = None
-    is_done: bool
+    is_completed: bool
     order: int
     created: datetime
     updated: datetime
@@ -45,7 +45,7 @@ class TaskInDBBase(TaskBase):
 
 class TaskPreview(BaseModel):
     id: int
-    is_done: int
+    is_completed: int
     order: int
 
     class Config:
@@ -136,7 +136,7 @@ class TaskJSONSerializable(BaseModel):
     name: str
     project_id: int
     is_important: bool
-    is_done: bool
+    is_completed: bool
 
     class Config:
         orm_mode = True

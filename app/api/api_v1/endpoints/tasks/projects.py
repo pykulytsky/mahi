@@ -49,7 +49,7 @@ async def get_tasks_by_project(
         return Task.filter(skip, limit, order_by, desc, project_id=project_id)
 
     return Task.filter(
-        skip, limit, order_by, desc, project_id=project_id, is_done=False
+        skip, limit, order_by, desc, project_id=project_id, is_completed=False
     )
 
 
