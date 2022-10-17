@@ -16,3 +16,6 @@ class TaskManager(Manager):
             if task.order >= object.order:
                 Task.update(task.id, order=task.order + 1)
         return super().create(object=object)
+
+    def reorder(self):
+        pass

@@ -9,10 +9,9 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import BaseRoute
 
 from app import models
-from app.api.deps import get_current_active_user
+from app.api.deps import Permission, get_current_active_user
 from app.core.exceptions import ImproperlyConfigured
 from app.managers import Manager
-from app.api.deps import Permission
 
 
 class BaseCrudRouter(APIRouter):
@@ -421,7 +420,6 @@ class PermissionedCrudRouter(AuthenticatedCrudRouter):
         *args,
         **kwargs,
     ) -> None:
-        self.owner_field_is_required = owner_field_is_required
 
         super().__init__(
             model=model,
@@ -433,6 +431,7 @@ class PermissionedCrudRouter(AuthenticatedCrudRouter):
             prefix=prefix,
             tags=tags,
             add_create_route=add_create_route,
+            owner_field_is_required=owner_field_is_required,
             *args,
             **kwargs,
         )

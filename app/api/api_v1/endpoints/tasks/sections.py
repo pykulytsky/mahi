@@ -1,22 +1,31 @@
 from fastapi import Depends
 
 from app.api.deps import get_current_active_user
-from app.api.router import AuthenticatedCrudRouter
-from app.models import Section, User
-from app.schemas import section
+from app.api.router import PermissionedCrudRouter
+from app.managers import SectionManager
+from app.models import (
+    Section,
+    SectionCreate,
+    SectionRead,
+    SectionReadDetail,
+    SectionUpdate,
+    User,
+)
 
-router = AuthenticatedCrudRouter(
+router = PermissionedCrudRouter(
     model=Section,
-    get_schema=section.Section,
-    create_schema=section.SectionCreate,
-    update_schema=section.SectionUpdate,
+    manager=SectionManager,
+    get_schema=SectionRead,
+    create_schema=SectionCreate,
+    update_schema=SectionUpdate,
+    detail_schema=SectionReadDetail,
     prefix="/sections",
     tags=["task"],
     owner_field_is_required=True,
 )
 
 
-@router.post("/{id}/reorder", response_model=section.Section)
+@router.post("/{id}/reorder", response_model=SectionReadDetail)
 async def reorder_section(
     id: int,
     order: int,

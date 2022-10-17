@@ -1,5 +1,7 @@
+from datetime import date
 from typing import TYPE_CHECKING, Optional
 
+from fastapi_permissions import Allow
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.models import Timestamped
@@ -13,6 +15,7 @@ class TaskBase(SQLModel):
     name: str = Field(index=True)
     description: str | None = Field(default=None)
     order: int = Field(index=True, default=0)
+    deadline: date | None = Field(default=None)
 
 
 class Task(TaskBase, Timestamped, table=True):
@@ -30,6 +33,25 @@ class Task(TaskBase, Timestamped, table=True):
     assigned_to: list["User"] = Relationship(
         back_populates="assigned_tasks", link_model=Assignee
     )
+
+    def __acl__(self):
+        acl_list = [
+            (Allow, f"user:{self.owner_id}", "view"),
+            (Allow, f"user:{self.owner_id}", "edit"),
+            (Allow, f"user:{self.owner_id}", "assign"),
+            (Allow, f"user:{self.owner_id}", "complete"),
+            (Allow, f"user:{self.owner_id}", "delete"),
+        ]
+        if self.project:
+            for p in self.project.participants:
+                acl_list.append((Allow, f"user:{p.id}", "view"))
+                acl_list.append((Allow, f"user:{p.id}", "edit"))
+        elif self.section:
+            for p in self.section.project.participants:
+                acl_list.append((Allow, f"user:{p.id}", "view"))
+                acl_list.append((Allow, f"user:{p.id}", "edit"))
+
+        return acl_list
 
 
 class TaskCreate(TaskBase):
@@ -59,3 +81,11 @@ class TaskUpdate(SQLModel):
     order: int | None = None
     project_id: int | None = None
     section_id: int | None = None
+
+
+class TaskReorder(SQLModel):
+    source_id: int
+    source_type: str
+    destination_id: int
+    destination_type: str
+    order: int

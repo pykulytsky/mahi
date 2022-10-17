@@ -2,39 +2,45 @@ from datetime import datetime
 
 from fastapi import BackgroundTasks, Depends, HTTPException
 
-from app import schemas
 from app.api.deps import Permission, get_current_active_user
-from app.api.router import AuthenticatedCrudRouter
-from app.models import Project, Section, Task, User
+from app.api.router import PermissionedCrudRouter
+from app.managers import TaskManager
+from app.managers.project import ProjectManager
+from app.managers.section import SectionManager
+from app.models import (
+    Project,
+    Task,
+    TaskCreate,
+    TaskRead,
+    TaskReadDetail,
+    TaskReorder,
+    TaskUpdate,
+    User,
+)
 from app.sse.tasks import deadline_remind, remind
 
-router = AuthenticatedCrudRouter(
+router = PermissionedCrudRouter(
     model=Task,
-    get_schema=schemas.Task,
-    create_schema=schemas.TaskCreate,
-    update_schema=schemas.TaskUpdate,
+    manager=TaskManager,
+    get_schema=TaskRead,
+    create_schema=TaskCreate,
+    update_schema=TaskUpdate,
+    detail_schema=TaskReadDetail,
     prefix="/tasks",
     tags=["task"],
     owner_field_is_required=True,
 )
 
 
-def get_task_from_db(id):
-    return schemas.TaskDetail.from_orm(Task.get(id=id))
-
-
-@router.get("/{id}", response_model=schemas.TaskDetail)
-async def get_task(task: schemas.TaskDetail = Permission("view", get_task_from_db)):
-    return task
-
-
-@router.post("/", response_model=schemas.Task)
+@router.post("/", response_model=TaskReadDetail)
 async def create_task(
-    task_in: schemas.TaskCreate,
+    task_in: TaskCreate,
     background_tasks: BackgroundTasks,
-    _: User = Depends(get_current_active_user),
+    user: User = Depends(get_current_active_user),
+    manager: TaskManager = Depends(TaskManager),
 ):
-    instance = Task.create(**dict(task_in))
+    task_in.owner_id = user.id
+    instance = manager.create(task_in)
     if task_in.remind_at is not None:
         background_tasks.add_task(remind, instance)
     if task_in.deadline is not None:
@@ -42,20 +48,24 @@ async def create_task(
     return instance
 
 
-@router.get("/date/{date}", response_model=list[schemas.Task])
+@router.get("/date/{date}", response_model=list[TaskReadDetail])
 async def get_tasks_by_date(
     date: str,
     user: User = Depends(get_current_active_user),
+    manager: ProjectManager = Depends(ProjectManager),
+    tasks_manager: TaskManager = Depends(TaskManager),
 ):
     raw_date = datetime.strptime(date, "%Y-%m-%d")
-    owned_projects = Project.filter(owner=user)
+    owned_projects = manager.filter(Project.owner_id == user.id)
     tasks = []
     for project in owned_projects:
-        tasks += Task.filter(deadline=raw_date, project=project)
+        tasks += tasks_manager.filter(
+            Task.deadline == raw_date, Task.project_id == project.id
+        )
     return tasks
 
 
-@router.post("/{id}/move/{project_id}", response_model=schemas.Task)
+@router.post("/{id}/move/{project_id}", response_model=TaskRead)
 async def move_task_to_proejct(
     id: int,
     project_id: int,
@@ -69,11 +79,11 @@ async def move_task_to_proejct(
         raise HTTPException(status_code=400, detail="Authentication error")
 
 
-@router.post("/{order}/reorder/", response_model=schemas.Task)
+@router.post("/{order}/reorder/", response_model=TaskRead)
 async def reorder_tasks(
     order: str | int,
-    reorder_schema: schemas.TaskReorder,
-    _: User = Depends(get_current_active_user),
+    reorder_schema: TaskReorder,
+    manager: TaskManager = Depends(TaskManager),
 ):
 
     project_id, section_id = (
@@ -81,17 +91,25 @@ async def reorder_tasks(
         if reorder_schema.source_type == "project"
         else (None, reorder_schema.source_id)
     )
-    instance = Task.get(section_id=section_id, project_id=project_id, order=order)
+    instance = manager.one(
+        Task.section_id == section_id,
+        Task.project_id == project_id,
+        Task.order == order,
+    )
 
-    model = Section if reorder_schema.destination_type == "section" else Project
+    model = (
+        SectionManager
+        if reorder_schema.destination_type == "section"
+        else ProjectManager
+    )
     destination = model.get(id=reorder_schema.destination_id)
 
-    return Task.reorder(instance, destination, reorder_schema.order)
+    return manager.reorder(instance, destination, reorder_schema.order)
 
 
-@router.post("/{id}/assign/{user_id}", response_model=schemas.TaskDetail)
+@router.post("/{id}/assign/{user_id}", response_model=TaskReadDetail)
 async def assign_task(
     user_id: int,
-    task: schemas.TaskDetail = Permission("edit", get_task_from_db),
+    task: Task = Permission("edit", router._get_item()),
 ):
     return task

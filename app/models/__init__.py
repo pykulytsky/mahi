@@ -15,5 +15,5 @@ from .section import (
     SectionUpdate,
 )
 from .tag import Tag
-from .task import Task, TaskCreate, TaskRead, TaskReadDetail, TaskUpdate
+from .task import Task, TaskCreate, TaskRead, TaskReadDetail, TaskReorder, TaskUpdate
 from .user import User, UserCreate, UserRead, UserReadDetail, UserUpdate
