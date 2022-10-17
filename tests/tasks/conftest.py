@@ -50,8 +50,8 @@ def task_manager(db):
 
 
 @pytest.fixture
-def task_schema(project):
-    return TaskCreate(name="Test task", project_id=project.id)
+def task_schema(project, user):
+    return TaskCreate(name="Test task", project_id=project.id, owner_id=user.id)
 
 
 @pytest.fixture
@@ -80,3 +80,12 @@ def tag(tag_manager, tag_schema, task, db):
     db.refresh(task)
     yield tag
     tag_manager.delete(tag)
+
+
+@pytest.fixture
+def section_task(section, task_schema, task_manager):
+    task_schema.project_id = None
+    task_schema.section_id = section.id
+    task = task_manager.create(task_schema)
+    yield task
+    task_manager.delete(task)

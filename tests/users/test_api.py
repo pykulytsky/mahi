@@ -99,3 +99,15 @@ def test_access_token(client, user):
 
     assert "exp" in payload
     assert "sub" in payload
+
+
+def test_permission_for_authenticated_user(auth_client):
+    response = auth_client.get("test")
+
+    assert response.status_code == 200
+
+
+def test_permission_for_anon_user(client):
+    response = client.get("test")
+
+    assert response.status_code == 401

@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi_permissions import Allow
+from fastapi_permissions import Allow, Authenticated
 
 from app import schemas
 from app.api import deps
@@ -36,7 +36,7 @@ def get_access_token(
         raise HTTPException(status_code=403, detail=str(e))
 
 
-example_acl = [(Allow, "user:156", "view")]
+example_acl = [(Allow, Authenticated, "view")]
 
 
 @router.get("/test")
