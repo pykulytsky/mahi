@@ -3,9 +3,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.deps import get_current_active_user
-from app.core.exceptions import ObjectDoesNotExist
 from app.managers import TaskManager
-from app.models import Reaction, ReactionCreate, Task, TaskReadDetail, User
+from app.models import ReactionCreate, TaskReadDetail, User
 
 router = APIRouter(prefix="/reactions", tags=["task"])
 
@@ -27,5 +26,5 @@ async def remove_reaction(
 ):
     try:
         return task_manager.remove_reaction(reaction, user)
-    except:
+    except:  # noqa
         raise HTTPException(status_code=404, detail="No reactions was found")
