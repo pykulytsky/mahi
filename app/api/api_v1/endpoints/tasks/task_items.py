@@ -16,7 +16,9 @@ from app.models import (
     TaskReorder,
     TaskUpdate,
     User,
+    ReactionCreate
 )
+from app.models.reaction import ReactionBase
 from app.sse.tasks import deadline_remind, remind
 
 router = PermissionedCrudRouter(
@@ -84,6 +86,8 @@ async def reorder_tasks(
     order: str | int,
     reorder_schema: TaskReorder,
     manager: TaskManager = Depends(TaskManager),
+    section_manager: SectionManager = Depends(SectionManager),
+    project_manager: ProjectManager = Depends(ProjectManager),
 ):
 
     project_id, section_id = (
@@ -97,12 +101,12 @@ async def reorder_tasks(
         Task.order == order,
     )
 
-    model = (
-        SectionManager
+    parent_manager = (
+        section_manager
         if reorder_schema.destination_type == "section"
-        else ProjectManager
+        else project_manager
     )
-    destination = model.get(id=reorder_schema.destination_id)
+    destination = parent_manager.get(id=reorder_schema.destination_id)
 
     return manager.reorder(instance, destination, reorder_schema.order)
 
@@ -113,3 +117,27 @@ async def assign_task(
     task: Task = Permission("edit", router._get_item()),
 ):
     return task
+
+
+@router.post("/{id}/reactions", response_model=TaskReadDetail)
+async def add_reaction(
+    reaction: ReactionBase,
+    user: User = Depends(get_current_active_user),
+    task: Task = Permission("edit", router._get_item()),
+    task_manager: TaskManager = Depends(TaskManager),
+):
+    return task_manager.add_reaction(reaction, task, user)
+
+
+@router.post("/{id}/reactions/remove", response_model=TaskReadDetail)
+async def remove_reaction(
+    reaction: ReactionBase,
+    user: User = Depends(get_current_active_user),
+    task: Task = Permission("edit", router._get_item()),
+    task_manager: TaskManager = Depends(TaskManager),
+):
+    try:
+        task = task_manager.remove_reaction(reaction, task, user)
+        return task
+    except:  # noqa
+        raise HTTPException(status_code=404, detail="No reactions was found")

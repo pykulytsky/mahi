@@ -19,6 +19,7 @@ class TaskBase(SQLModel):
     deadline: date | None = Field(default=None)
     remind_at: datetime | None = Field(default=None)
     is_completed: bool = Field(default=False)
+    is_important: bool = Field(default=False)
 
 
 class Task(TaskBase, Timestamped, table=True):
@@ -88,7 +89,12 @@ class TaskCreate(TaskBase):
 
 
 class TaskRead(TaskBase):
+    from app.models.tag import TagRead
+    from app.models.reaction import ReactionRead
+
     id: int
+    tags: list[TagRead]
+    reactions: list[ReactionRead]
 
 
 class TaskReadDetail(TaskRead):
@@ -107,6 +113,10 @@ class TaskUpdate(SQLModel):
     order: int | None = None
     project_id: int | None = None
     section_id: int | None = None
+    is_completed: bool | None = False
+    is_important: bool | None = False
+    deadline: date | None = None
+    remind_at: datetime | None = None
 
 
 class TaskReorder(SQLModel):
@@ -118,7 +128,7 @@ class TaskReorder(SQLModel):
 
 
 @event.listens_for(Task.is_completed, "set")
-def track_task_completion(target, value, oldvalue, initiator):
+def track_task_completion(target, value, oldvalue, _):
     """Updates completed_at field when task is being done. Is used to track productivity at dashboard."""
     if value != oldvalue:
         if value:

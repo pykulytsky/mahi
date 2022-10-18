@@ -7,7 +7,6 @@ from sqlmodel import Field, Relationship, SQLModel
 from app.models.base import Timestamped
 
 from .link_tables import Participant
-from .task import TaskRead
 
 if TYPE_CHECKING:
     from app.models import Section, Task, User
@@ -57,14 +56,23 @@ class ProjectCreate(ProjectBase):
 
 
 class ProjectRead(ProjectBase):
+    from app.models.section import SectionRead
+
+    id: int
+    sections: list[SectionRead]
+
+
+class ProjectReadDetail(ProjectBase):
+    from app.models.user import UserRead
+    from app.models.section import SectionReadDetail
+    from .task import TaskRead
+
     id: int
 
-
-class ProjectReadDetail(ProjectRead):
-    from app.models.user import UserRead
-
     tasks: list[TaskRead]
+    sections: list[SectionReadDetail]
     owner: UserRead
+    participants: list[UserRead]
 
 
 class ProjectUpdate(SQLModel):

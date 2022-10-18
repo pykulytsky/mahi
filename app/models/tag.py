@@ -41,11 +41,10 @@ class TagRead(TagBase):
     id: int
 
 
-class TagReadDetail(TagRead):
-    from app.models.task import TaskRead
+class TagReadDetail(TagBase):
 
-    owner: int  # TODO UserRead
-    tasks: list[TaskRead]
+    id: int
+    owner_id: int
 
 
 class TagUpdate(SQLModel):

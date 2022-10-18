@@ -39,6 +39,7 @@ class User(UserBase, table=True):
     participated_projects: list["Project"] = Relationship(
         back_populates="participants", link_model=Participant
     )
+
     reactions: list["Reaction"] = Relationship(
         back_populates="users", link_model=UserReactionLink
     )
@@ -54,11 +55,15 @@ class UserRead(UserBase):
     is_superuser: bool
 
 
-class UserReadDetail(UserRead):
-    from app.models.project import ProjectRead
+class UserReadDetail(UserBase):
     from app.models.reaction import ReactionRead
     from app.models.tag import TagRead
     from app.models.task import TaskRead
+    from app.models.project import ProjectRead
+
+    id: int
+    is_active: bool
+    is_superuser: bool
 
     verification_code: uuid.UUID
 

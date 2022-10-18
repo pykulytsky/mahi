@@ -1,5 +1,5 @@
 from app.models import Task, TaskCreate
-from app.models.reaction import ReactionCreate
+from app.models.reaction import ReactionBase, ReactionCreate
 from app.models.user import User
 
 from .base import Manager
@@ -57,25 +57,25 @@ class TaskManager(Manager):
                 self.update(task.id, order=task.order - 1)
         return super().delete(instance)
 
-    def add_reaction(self, reaction: ReactionCreate, user: User):
-        task = self.get(id=reaction.task_id)
+    def add_reaction(self, reaction: ReactionBase, task: Task, user: User):
         for r in task.reactions:
             if reaction.emoji == r.emoji:
                 r.users.append(user)
-                self.db.add(r)
+                self.session.add(r)
                 self.session.commit()
                 self.session.refresh(r)
                 return task
 
-        reaction = ReactionManager(self.session).create(reaction)
+        reaction = ReactionManager(self.session).create(
+            ReactionCreate(emoji=reaction.emoji, task_id=task.id)
+        )
         reaction.users.append(user)
         self.session.add(reaction)
         self.session.commit()
         self.session.refresh(task)
         return task
 
-    def remove_reaction(self, reaction: ReactionCreate, user: User):
-        task = self.get(id=reaction.task_id)
+    def remove_reaction(self, reaction: ReactionBase, task: Task, user: User):
         for r in task.reactions:
             if reaction.emoji == r.emoji:
                 r.users.remove(user)
@@ -83,4 +83,4 @@ class TaskManager(Manager):
                     ReactionManager(self.session).delete(r)
                 self.session.commit()
                 self.session.refresh(task)
-                return task
+        return task

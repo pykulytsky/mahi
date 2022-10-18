@@ -29,6 +29,7 @@ class ReactionCreate(ReactionBase):
 
 class ReactionRead(ReactionBase):
     users: list  # TODO UserRead
+    task_id: int
 
 
 class ReactionReadDetail(ReactionRead):

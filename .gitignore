@@ -134,3 +134,4 @@ dmypy.json
 poetry.lock
 settings.ini
 database.db
+.vim/
