@@ -146,12 +146,14 @@ async def apply_tag(
     tag_id: int,
     task: Task = Permission("edit", router._get_item()),
     task_manager: TaskManager = Depends(TaskManager),
-    tag_manager: TagManager = Depends(TagManager)
+    tag_manager: TagManager = Depends(TagManager),
 ):
     tag = tag_manager.get(id=tag_id)
     if tag in task.tags:
         raise HTTPException(
-            status_code=400, detail=f"Tag with id {tag.id} was already applied to this task")
+            status_code=400,
+            detail=f"Tag with id {tag.id} was already applied to this task",
+        )
     return task_manager.apply_tag(tag, task)
 
 
@@ -160,10 +162,11 @@ async def remove_tag(
     tag_id: int,
     task: Task = Permission("edit", router._get_item()),
     task_manager: TaskManager = Depends(TaskManager),
-    tag_manager: TagManager = Depends(TagManager)
+    tag_manager: TagManager = Depends(TagManager),
 ):
     tag = tag_manager.get(id=tag_id)
     if tag not in task.tags:
         raise HTTPException(
-            status_code=400, detail=f"Tag with id {tag.id} is not applied to this task")
+            status_code=400, detail=f"Tag with id {tag.id} is not applied to this task"
+        )
     return task_manager.remove_tag(tag, task)

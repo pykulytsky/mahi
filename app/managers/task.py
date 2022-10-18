@@ -101,4 +101,3 @@ class TaskManager(Manager):
         self.session.refresh(task)
 
         return task
-

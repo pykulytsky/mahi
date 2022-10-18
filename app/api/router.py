@@ -116,8 +116,7 @@ class BaseCrudRouter(APIRouter):
             self.remove_api_route(path, methods)
 
         if not summary:
-            _endpoint_name = endpoint.__name__.strip(
-                "_").replace("_", " ").capitalize()
+            _endpoint_name = endpoint.__name__.strip("_").replace("_", " ").capitalize()
             if self.model.__name__.lower() in _endpoint_name:
                 summary = _endpoint_name
             else:
