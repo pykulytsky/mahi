@@ -63,10 +63,12 @@ class Manager:
         return res
 
     def filter(
-        self, *expressions: list[BinaryExpression | bool], limit: int = 100, offset: int = 0
+        self,
+        *expressions: list[BinaryExpression | bool],
+        limit: int = 100,
+        offset: int = 0,
     ) -> list[model]:
-        stmt = select(self.model).where(
-            *expressions).offset(offset).limit(limit)
+        stmt = select(self.model).where(*expressions).offset(offset).limit(limit)
         res = self.session.exec(stmt).all()
         return res
 

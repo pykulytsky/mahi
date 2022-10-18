@@ -1,3 +1,11 @@
+from fastapi import Depends, HTTPException
+from sqlmodel import Session
+
+from app.api.deps import Permission, get_current_active_user
+from app.api.router import PermissionedCrudRouter
+from app.db import get_session
+from app.managers import ProjectManager
+from app.managers.user import UserManager
 from app.models import (
     Project,
     ProjectCreate,
@@ -6,13 +14,6 @@ from app.models import (
     ProjectUpdate,
     User,
 )
-from app.managers import ProjectManager
-from app.api.router import PermissionedCrudRouter
-from app.api.deps import Permission, get_current_active_user
-from app.db import get_session
-from fastapi import Depends, HTTPException
-from sqlmodel import Session
-
 
 router = PermissionedCrudRouter(
     model=Project,
@@ -71,8 +72,21 @@ async def accept_invitation(
         )
 
 
-@router.get("/{id}/direct-invite")
+@router.get("/{id}/direct-invite/{user_id}", response_model=ProjectReadDetail)
 async def send_direct_invitation(
+    user_id: int,
     project: Project = Permission("invite", router._get_item()),
+    db: Session = Depends(get_session),
+    user_manager: UserManager = Depends(UserManager),
 ):
-    pass
+    target_user = user_manager.get(id=user_id)
+    if target_user not in project.participants and target_user != project.owner:
+        project.participants.append(target_user)
+        db.commit()
+        db.refresh(project)
+        return project
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail="Current user is already participant of this project",
+        )

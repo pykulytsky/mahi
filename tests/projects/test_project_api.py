@@ -94,7 +94,7 @@ def test_should_only_owner_generate_invitation_code(client, project):
     assert res.status_code == 401
 
 
-def test_accept_invitation(auth_client, another_auth_client, project):
+def test_accept_invitation(auth_client, another_auth_client, project, another_user):
     res = auth_client.get(f"projects/{project.id}/invite")
 
     assert "code" in res.json()
@@ -104,6 +104,7 @@ def test_accept_invitation(auth_client, another_auth_client, project):
     res = another_auth_client.get(f"projects/invitation/{code}")
     assert res.status_code == 200
     assert len(res.json()["participants"]) == 1
+    assert res.json()["participants"][0]["id"] == another_user.id
 
 
 def test_should_prevent_invitation(auth_client, project):
@@ -126,3 +127,19 @@ def test_should_prevent_anon_user_invitation(auth_client, project, client):
 
     res = client.get(f"projects/invitation/{code}")
     assert res.status_code == 401
+
+
+def test_direct_invite(auth_client, project, another_user):
+    res = auth_client.get(
+        f"projects/{project.id}/direct-invite/{another_user.id}")
+
+    assert res.status_code == 200
+    assert len(res.json()["participants"]) == 1
+    assert res.json()["participants"][0]["id"] == another_user.id
+
+
+def test_direct_invite_should_prevent_invite_of_participant_or_owner(auth_client, project, user):
+    res = auth_client.get(
+        f"projects/{project.id}/direct-invite/{user.id}")
+
+    assert res.status_code == 404

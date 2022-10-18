@@ -3,6 +3,7 @@ from datetime import datetime
 
 from app import schemas
 from app.models import Task
+from app.models.project import Project, ProjectBase
 
 from .kafka import produce
 
@@ -37,3 +38,13 @@ async def deadline_remind(task: Task) -> None:
             },
             topic=f"personal_{task.project.owner.id}",
         )
+
+
+async def project_invite(project: Project) -> None:
+    await produce(
+        message={
+            "message_type": "invite",
+            "project": ProjectBase.from_orm(project).dict(),
+            "timestamp": datetime.now().timestamp(),
+        }
+    )
