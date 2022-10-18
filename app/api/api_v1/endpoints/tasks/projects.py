@@ -1,19 +1,18 @@
-from fastapi import Depends, HTTPException
-from fastapi_sqlalchemy import db
-
-from app.api.deps import Permission, get_current_active_user
-from app.api.router import PermissionedCrudRouter
-from app.managers import ProjectManager
 from app.models import (
     Project,
     ProjectCreate,
     ProjectRead,
     ProjectReadDetail,
     ProjectUpdate,
-    Task,
-    TaskRead,
     User,
 )
+from app.managers import ProjectManager
+from app.api.router import PermissionedCrudRouter
+from app.api.deps import Permission, get_current_active_user
+from app.db import get_session
+from fastapi import Depends, HTTPException
+from sqlmodel import Session
+
 
 router = PermissionedCrudRouter(
     model=Project,
@@ -44,38 +43,26 @@ async def get_detail_user_projects(
     return manager.filter(Project.owner_id == user.id)
 
 
-@router.get("/{project_id}/tasks", response_model=list[TaskRead])
-async def get_tasks_by_project(
-    project_id,
-    skip: int = 0,
-    limit: int = 100,
-    order_by: str = "created",
-    desc: bool = False,
-    _: User = Depends(get_current_active_user),
-):
-    project = Project.get(id=project_id)
-    if project.show_completed_tasks:
-        return Task.filter(skip, limit, order_by, desc, project_id=project_id)
-
-    return Task.filter(
-        skip, limit, order_by, desc, project_id=project_id, is_completed=False
-    )
-
-
 @router.get("/{id}/invite")
 async def get_invitation_code(
     project: Project = Permission("invite", router._get_item()),
+    manager: ProjectManager = Depends(ProjectManager),
 ):
-    return {"code": Project.generate_invitaion_code(project.id)}
+    return {"code": manager.generate_invitaion_code(project.id)}
 
 
 @router.get("/invitation/{code}", response_model=ProjectReadDetail)
-async def accept_invitation(code: str, user: User = Depends(get_current_active_user)):
-    project = Project.validate_invitation_code(code)
+async def accept_invitation(
+    code: str,
+    user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_session),
+    manager: ProjectManager = Depends(ProjectManager),
+):
+    project = manager.validate_invitation_code(code)
     if user not in project.participants and user != project.owner:
         project.participants.append(user)
-        db.session.commit()
-        db.session.refresh(project)
+        db.commit()
+        db.refresh(project)
         return project
     else:
         raise HTTPException(

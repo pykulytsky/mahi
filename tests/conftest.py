@@ -92,3 +92,8 @@ def another_token(another_user, user_manager):
 @pytest.fixture()
 def auth_client(token):
     return JWTAuthTestClient(app, token=token)
+
+
+@pytest.fixture()
+def another_auth_client(another_token):
+    return JWTAuthTestClient(app, token=another_token)

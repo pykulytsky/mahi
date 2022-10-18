@@ -28,7 +28,7 @@ class Manager:
 
     def one(
         self,
-        *expressions: list[BinaryExpression],
+        *expressions: list[BinaryExpression | bool],
     ):
         stmt = select(self.model).where(*expressions)
         res = self.session.exec(stmt)
@@ -63,13 +63,14 @@ class Manager:
         return res
 
     def filter(
-        self, *expressions: list[BinaryExpression], limit: int = 100, offset: int = 0
+        self, *expressions: list[BinaryExpression | bool], limit: int = 100, offset: int = 0
     ) -> list[model]:
-        stmt = select(self.model).where(*expressions).offset(offset).limit(limit)
+        stmt = select(self.model).where(
+            *expressions).offset(offset).limit(limit)
         res = self.session.exec(stmt).all()
         return res
 
-    def exists(self, *expressions: list[BinaryExpression]) -> model | None:
+    def exists(self, *expressions: list[BinaryExpression | bool]) -> model | None:
         stmt = select(self.model).where(*expressions)
         res = self.session.exec(stmt)
         try:

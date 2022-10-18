@@ -55,6 +55,18 @@ def get_user_projects(project, auth_client):
     assert res.json()[0]["id"] == project.id
 
 
+def get_user_detail_projects(project, auth_client):
+    res = auth_client.delete("projects/user/detail")
+
+    assert res.status_code == 200
+
+    assert len(res.json()) == 1
+    assert res.json()[0]["id"] == project.id
+    assert "owner" in res.json()[0]
+    assert "participants" in res.json()[0]
+    assert "tasks" in res.json()[0]
+
+
 def test_create_project(auth_client, project_schema, user):
     res = auth_client.post("projects/", json=project_schema.dict())
 
@@ -66,4 +78,51 @@ def test_create_project(auth_client, project_schema, user):
 def test_should_only_auth_user_create_projects(client, project_schema):
     res = client.post("projects/", json=project_schema.dict())
 
+    assert res.status_code == 401
+
+
+def test_generate_invitation_code(auth_client, project):
+    res = auth_client.get(f"projects/{project.id}/invite")
+
+    assert res.status_code == 200
+    assert "code" in res.json()
+
+
+def test_should_only_owner_generate_invitation_code(client, project):
+    res = client.get(f"projects/{project.id}/invite")
+
+    assert res.status_code == 401
+
+
+def test_accept_invitation(auth_client, another_auth_client, project):
+    res = auth_client.get(f"projects/{project.id}/invite")
+
+    assert "code" in res.json()
+
+    code = res.json()["code"]
+
+    res = another_auth_client.get(f"projects/invitation/{code}")
+    assert res.status_code == 200
+    assert len(res.json()["participants"]) == 1
+
+
+def test_should_prevent_invitation(auth_client, project):
+    res = auth_client.get(f"projects/{project.id}/invite")
+
+    assert "code" in res.json()
+
+    code = res.json()["code"]
+
+    res = auth_client.get(f"projects/invitation/{code}")
+    assert res.status_code == 404
+
+
+def test_should_prevent_anon_user_invitation(auth_client, project, client):
+    res = auth_client.get(f"projects/{project.id}/invite")
+
+    assert "code" in res.json()
+
+    code = res.json()["code"]
+
+    res = client.get(f"projects/invitation/{code}")
     assert res.status_code == 401
