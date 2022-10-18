@@ -14,12 +14,9 @@ from .test_client import JWTAuthTestClient
 
 
 @pytest.fixture(scope="session")
-def client(db, user_manager):
+def client(db):
     def get_session_override():
         return db
-
-    def get_user_manager_override():
-        return user_manager
 
     app.dependency_overrides[get_session] = get_session_override
 

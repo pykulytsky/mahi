@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
-from app.models import ReactionCreate, TaskCreate
+from app.models import TaskCreate
+from app.models.reaction import ReactionBase
 
 
 def test_task_update_completed_at_when_tash_is_been_completed(task_manager, project):
@@ -84,7 +85,7 @@ def test_add_reaction_to_task(task_manager, task, user):
     assert task.reactions == []
 
     task = task_manager.add_reaction(
-        reaction=ReactionCreate(emoji="!", task_id=task.id), user=user
+        reaction=ReactionBase(emoji="!"), task=task, user=user
     )
 
     assert len(task.reactions) == 1
@@ -94,13 +95,13 @@ def test_add_reaction_to_task(task_manager, task, user):
 
 def test_remove_reaction(task_manager, task, user):
     task = task_manager.add_reaction(
-        reaction=ReactionCreate(emoji="!", task_id=task.id), user=user
+        reaction=ReactionBase(emoji="!"), task=task, user=user
     )
 
     assert len(task.reactions) == 1
 
     task = task_manager.remove_reaction(
-        reaction=ReactionCreate(emoji="!", task_id=task.id), user=user
+        reaction=ReactionBase(emoji="!"), task=task, user=user
     )
 
     assert len(task.reactions) == 0

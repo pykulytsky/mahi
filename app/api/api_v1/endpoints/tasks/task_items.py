@@ -4,11 +4,10 @@ from fastapi import BackgroundTasks, Depends, HTTPException
 
 from app.api.deps import Permission, get_current_active_user
 from app.api.router import PermissionedCrudRouter
-from app.managers import TaskManager
-from app.managers.project import ProjectManager
-from app.managers.section import SectionManager
+from app.managers import ProjectManager, SectionManager, TaskManager
 from app.models import (
     Project,
+    ReactionBase,
     Task,
     TaskCreate,
     TaskRead,
@@ -16,9 +15,7 @@ from app.models import (
     TaskReorder,
     TaskUpdate,
     User,
-    ReactionCreate
 )
-from app.models.reaction import ReactionBase
 from app.sse.tasks import deadline_remind, remind
 
 router = PermissionedCrudRouter(

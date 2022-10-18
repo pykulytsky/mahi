@@ -31,7 +31,7 @@ router = PermissionedCrudRouter(
 @router.get("/user/", response_model=list[ProjectRead])
 async def get_user_projects(
     user: User = Depends(get_current_active_user),
-    manager: ProjectManager = Depends(ProjectManager)
+    manager: ProjectManager = Depends(ProjectManager),
 ):
     return manager.filter(Project.owner_id == user.id)
 
@@ -39,7 +39,7 @@ async def get_user_projects(
 @router.get("/user/detail", response_model=list[ProjectReadDetail])
 async def get_detail_user_projects(
     user: User = Depends(get_current_active_user),
-    manager: ProjectManager = Depends(ProjectManager)
+    manager: ProjectManager = Depends(ProjectManager),
 ):
     return manager.filter(Project.owner_id == user.id)
 

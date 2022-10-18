@@ -63,8 +63,9 @@ class ProjectRead(ProjectBase):
 
 
 class ProjectReadDetail(ProjectBase):
-    from app.models.user import UserRead
     from app.models.section import SectionReadDetail
+    from app.models.user import UserRead
+
     from .task import TaskRead
 
     id: int

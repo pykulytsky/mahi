@@ -8,6 +8,7 @@ from .project import (
 )
 from .reaction import (
     Reaction,
+    ReactionBase,
     ReactionCreate,
     ReactionRead,
     ReactionReadDetail,

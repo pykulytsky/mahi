@@ -56,10 +56,10 @@ class UserRead(UserBase):
 
 
 class UserReadDetail(UserBase):
+    from app.models.project import ProjectRead
     from app.models.reaction import ReactionRead
     from app.models.tag import TagRead
     from app.models.task import TaskRead
-    from app.models.project import ProjectRead
 
     id: int
     is_active: bool

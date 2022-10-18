@@ -89,8 +89,8 @@ class TaskCreate(TaskBase):
 
 
 class TaskRead(TaskBase):
-    from app.models.tag import TagRead
     from app.models.reaction import ReactionRead
+    from app.models.tag import TagRead
 
     id: int
     tags: list[TagRead]
