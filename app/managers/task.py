@@ -1,5 +1,6 @@
 from app.models import Task, TaskCreate
 from app.models.reaction import ReactionBase, ReactionCreate
+from app.models.tag import Tag
 from app.models.user import User
 
 from .base import Manager
@@ -84,3 +85,20 @@ class TaskManager(Manager):
                 self.session.commit()
                 self.session.refresh(task)
         return task
+
+    def apply_tag(self, tag: Tag, task: Task) -> Task:
+        task.tags.append(tag)
+        self.session.add(task)
+        self.session.commit()
+        self.session.refresh(task)
+
+        return task
+
+    def remove_tag(self, tag: Tag, task: Task) -> Task:
+        task.tags.remove(tag)
+        self.session.add(task)
+        self.session.commit()
+        self.session.refresh(task)
+
+        return task
+

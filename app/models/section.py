@@ -50,9 +50,11 @@ class SectionRead(SectionBase):
     project_id: int
 
 
-class SectionReadDetail(SectionRead):
+class SectionReadDetail(SectionBase):
     from app.models.task import TaskRead
 
+    id: int
+    project_id: int
     tasks: list[TaskRead]
 
 

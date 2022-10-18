@@ -72,12 +72,8 @@ def tag_schema(user):
 
 
 @pytest.fixture
-def tag(tag_manager, tag_schema, task, db):
+def tag(tag_manager, tag_schema):
     tag = tag_manager.create(tag_schema)
-    task.tags.append(tag)
-    db.add(task)
-    db.commit()
-    db.refresh(task)
     yield tag
     tag_manager.delete(tag)
 

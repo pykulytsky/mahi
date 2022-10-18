@@ -28,6 +28,7 @@ class ReactionCreate(ReactionBase):
 
 
 class ReactionRead(ReactionBase):
+    id: int
     users: list  # TODO UserRead
     task_id: int | None = None
 

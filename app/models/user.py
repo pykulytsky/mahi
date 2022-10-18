@@ -56,7 +56,6 @@ class UserRead(UserBase):
 
 
 class UserReadDetail(UserBase):
-    from app.models.project import ProjectRead
     from app.models.reaction import ReactionRead
     from app.models.tag import TagRead
     from app.models.task import TaskRead
@@ -67,8 +66,6 @@ class UserReadDetail(UserBase):
 
     verification_code: uuid.UUID
 
-    projects: list[ProjectRead]
-    participated_projects: list[ProjectRead]
     tags: list[TagRead]
     tasks: list[TaskRead]
     assigned_tasks: list[TaskRead]

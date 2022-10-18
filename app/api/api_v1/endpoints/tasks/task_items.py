@@ -5,6 +5,7 @@ from fastapi import BackgroundTasks, Depends, HTTPException
 from app.api.deps import Permission, get_current_active_user
 from app.api.router import PermissionedCrudRouter
 from app.managers import ProjectManager, SectionManager, TaskManager
+from app.managers.tag import TagManager
 from app.models import (
     Project,
     ReactionBase,
@@ -66,13 +67,13 @@ async def get_tasks_by_date(
 
 @router.post("/{id}/move/{project_id}", response_model=TaskRead)
 async def move_task_to_proejct(
-    id: int,
     project_id: int,
     user: User = Depends(get_current_active_user),
+    task: Task = Permission("edit", router._get_item()),
+    manager: TaskManager = Depends(TaskManager),
 ):
-    task = Task.get(id=id)
     if task.project.owner == user:
-        updated_task = Task.update(id=task.id, project_id=project_id)
+        updated_task = manager.update(id=task.id, project_id=project_id)
         return updated_task
     else:
         raise HTTPException(status_code=400, detail="Authentication error")
@@ -138,3 +139,31 @@ async def remove_reaction(
         return task
     except:  # noqa
         raise HTTPException(status_code=404, detail="No reactions was found")
+
+
+@router.post("/{id}/tags/{tag_id}", response_model=TaskReadDetail)
+async def apply_tag(
+    tag_id: int,
+    task: Task = Permission("edit", router._get_item()),
+    task_manager: TaskManager = Depends(TaskManager),
+    tag_manager: TagManager = Depends(TagManager)
+):
+    tag = tag_manager.get(id=tag_id)
+    if tag in task.tags:
+        raise HTTPException(
+            status_code=400, detail=f"Tag with id {tag.id} was already applied to this task")
+    return task_manager.apply_tag(tag, task)
+
+
+@router.post("/{id}/tags/{tag_id}/remove", response_model=TaskReadDetail)
+async def remove_tag(
+    tag_id: int,
+    task: Task = Permission("edit", router._get_item()),
+    task_manager: TaskManager = Depends(TaskManager),
+    tag_manager: TagManager = Depends(TagManager)
+):
+    tag = tag_manager.get(id=tag_id)
+    if tag not in task.tags:
+        raise HTTPException(
+            status_code=400, detail=f"Tag with id {tag.id} is not applied to this task")
+    return task_manager.remove_tag(tag, task)

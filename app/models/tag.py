@@ -42,7 +42,6 @@ class TagRead(TagBase):
 
 
 class TagReadDetail(TagBase):
-
     id: int
     owner_id: int
 
