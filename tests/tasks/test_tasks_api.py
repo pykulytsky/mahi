@@ -31,6 +31,8 @@ def test_task_detail_api_another_user(another_auth_client, task):
 
 
 def test_apply_tag_by_owner(auth_client, task, tag):
+    assert len(task.tags) == 0
+
     res = auth_client.post(f"tasks/{task.id}/tags/{tag.id}")
     data = res.json()
 
@@ -59,3 +61,68 @@ def test_remove_nonexistent_tag(auth_client, task, tag):
     res = auth_client.post(f"tasks/{task.id}/tags/{tag.id}/remove")
 
     assert res.status_code == 400
+
+
+def test_apply_tag_by_wrong_id(auth_client, task):
+    res = auth_client.post(f"tasks/{task.id}/tags/99999")
+
+    assert res.status_code == 404
+
+
+def test_remove_tag_by_wrong_id(auth_client, task):
+    res = auth_client.post(f"tasks/{task.id}/tags/99999/remove")
+
+    assert res.status_code == 404
+
+
+def test_assign_user(auth_client, task, another_user):
+    res = auth_client.post(f"tasks/{task.id}/assign/{another_user.id}")
+
+    assert res.status_code == 201
+    data = res.json()
+
+    assert len(data["assigned_to"]) == 1
+    assert data["assigned_to"][0]["id"] == another_user.id
+
+
+def test_assing_already_assigned_user(auth_client, task, another_user):
+    auth_client.post(f"tasks/{task.id}/assign/{another_user.id}")
+    res = auth_client.post(f"tasks/{task.id}/assign/{another_user.id}")
+
+    assert res.status_code == 400
+
+
+def test_assign_wrong_task(auth_client, another_user):
+    res = auth_client.post(f"tasks/999999/assign/{another_user.id}")
+
+    assert res.status_code == 404
+
+
+def test_assign_task_with_wrong_user(auth_client, task):
+    res = auth_client.post(f"tasks/{task.id}/assign/99999")
+
+    assert res.status_code == 404
+
+
+def test_remove_assignee(auth_client, task, another_user):
+    auth_client.post(f"tasks/{task.id}/assign/{another_user.id}")
+    res = auth_client.post(f"tasks/{task.id}/assign/{another_user.id}/remove")
+    data = res.json()
+
+    assert res.status_code == 201
+    assert len(data["assigned_to"]) == 0
+
+
+def test_remove_wrong_assignee(auth_client, task):
+    res = auth_client.post(f"tasks/{task.id}/assign/999999/remove")
+
+    assert res.status_code == 404
+
+
+def test_remove_user_which_is_not_assigned(auth_client, task, another_user):
+    res = auth_client.post(f"tasks/{task.id}/assign/{another_user.id}/remove")
+
+    assert res.status_code == 400
+
+
+

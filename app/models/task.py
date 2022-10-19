@@ -30,7 +30,8 @@ class Task(TaskBase, Timestamped, table=True):
     project: Optional["Project"] = Relationship(back_populates="tasks")
     section_id: int | None = Field(default=None, foreign_key="section.id")
     section: Optional["Section"] = Relationship(back_populates="tasks")
-    tags: Optional["Tag"] = Relationship(back_populates="tasks", link_model=TaskTagLink)
+    tags: Optional["Tag"] = Relationship(
+        back_populates="tasks", link_model=TaskTagLink)
     reactions: list["Reaction"] = Relationship(back_populates="task")
 
     owner_id: int | None = Field(default=None, foreign_key="user.id")
@@ -108,6 +109,7 @@ class TaskReadDetail(TaskBase):
     tags: list[TagRead]
     reactions: list[ReactionRead]
     owner: UserRead | None = None
+    assigned_to: list[UserRead]
 
 
 class TaskUpdate(SQLModel):

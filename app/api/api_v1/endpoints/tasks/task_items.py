@@ -6,6 +6,7 @@ from app.api.deps import Permission, get_current_active_user
 from app.api.router import PermissionedCrudRouter
 from app.managers import ProjectManager, SectionManager, TaskManager
 from app.managers.tag import TagManager
+from app.managers.user import UserManager
 from app.models import (
     Project,
     ReactionBase,
@@ -113,8 +114,30 @@ async def reorder_tasks(
 async def assign_task(
     user_id: int,
     task: Task = Permission("edit", router._get_item()),
+    user_manager: UserManager = Depends(UserManager),
+    manager: TaskManager = Depends(TaskManager),
 ):
-    return task
+    assignee = user_manager.get(id=user_id)
+    if assignee in task.assigned_to:
+        raise HTTPException(
+            status_code=400, detail="User is already assigned to this task"
+        )
+    return manager.assign_task(task, assignee)
+
+
+@router.post("/{id}/assign/{user_id}/remove", response_model=TaskReadDetail)
+async def remove_assign(
+    user_id: int,
+    task: Task = Permission("edit", router._get_item()),
+    user_manager: UserManager = Depends(UserManager),
+    manager: TaskManager = Depends(TaskManager),
+):
+    assignee = user_manager.get(id=user_id)
+    if assignee not in task.assigned_to:
+        raise HTTPException(
+            status_code=400, detail="User is not assigned to this task"
+        )
+    return manager.remove_assignee(task, assignee)
 
 
 @router.post("/{id}/reactions", response_model=TaskReadDetail)

@@ -85,3 +85,4 @@ def section_task(section, task_schema, task_manager):
     task = task_manager.create(task_schema)
     yield task
     task_manager.delete(task)
+

@@ -101,3 +101,21 @@ class TaskManager(Manager):
         self.session.refresh(task)
 
         return task
+
+    def assign_task(self, task: Task, user: User) -> Task:
+        task.assigned_to.append(user)
+        self.session.add(task)
+        self.session.commit()
+        self.session.refresh(task)
+
+        return task
+
+    def remove_assignee(self, task: Task, user: User) -> Task:
+        task.assigned_to.remove(user)
+        self.session.add(task)
+        self.session.commit()
+        self.session.refresh(task)
+
+        return task
+
+

@@ -1,9 +1,11 @@
 import asyncio
 from datetime import datetime
 
-from app import schemas
+from jwt.api_jwt import json
+
 from app.models import Task
 from app.models.project import Project, ProjectBase
+from app.models.task import TaskRead
 
 from .kafka import produce
 
@@ -14,12 +16,12 @@ async def remind(task: Task) -> None:
         await asyncio.sleep(delay)
 
         await produce(
-            message={
+            message=json.dumps({
                 "message_type": "remind",
-                "task": schemas.TaskJSONSerializable.from_orm(task).dict(),
+                "task": TaskRead.from_orm(task).dict(),
                 "timestamp": datetime.now().timestamp(),
-            },
-            topic=f"personal_{task.project.owner.id}",
+            }).encode("utf-8"),
+            topic=f"personal_{task.project.owner_id}",
         )
 
 
@@ -31,20 +33,20 @@ async def deadline_remind(task: Task) -> None:
         await asyncio.sleep(delay)
 
         await produce(
-            message={
+            message=json.dumps({
                 "message_type": "deadline",
-                "task": schemas.TaskJSONSerializable.from_orm(task).dict(),
+                "task": TaskRead.from_orm(task).dict(),
                 "timestamp": datetime.now().timestamp(),
-            },
-            topic=f"personal_{task.project.owner.id}",
+            }).encode("utf-8"),
+            topic=f"personal_{task.project.owner_id}",
         )
 
 
 async def project_invite(project: Project) -> None:
     await produce(
-        message={
+        message=json.dumps({
             "message_type": "invite",
             "project": ProjectBase.from_orm(project).dict(),
             "timestamp": datetime.now().timestamp(),
-        }
+        }).encode("utf-8")
     )
