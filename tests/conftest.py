@@ -1,11 +1,3 @@
-from app.models.task import TaskCreate
-from app.models.tag import TagCreate
-from app.models.section import SectionCreate
-from app.models.project import ProjectCreate
-from app.managers.task import TaskManager
-from app.managers.tag import TagManager
-from app.managers.section import SectionManager
-from app.managers.project import ProjectManager
 from datetime import timedelta
 
 import pytest
@@ -16,7 +8,15 @@ from sqlmodel.pool import StaticPool
 
 from app.db import get_session
 from app.main import app
+from app.managers.project import ProjectManager
+from app.managers.section import SectionManager
+from app.managers.tag import TagManager
+from app.managers.task import TaskManager
 from app.managers.user import UserManager
+from app.models.project import ProjectCreate
+from app.models.section import SectionCreate
+from app.models.tag import TagCreate
+from app.models.task import TaskCreate
 from app.models.user import UserCreate
 
 from .test_client import JWTAuthTestClient
@@ -24,7 +24,7 @@ from .test_client import JWTAuthTestClient
 
 @pytest.fixture
 def mock_backround_tasks(mocker):
-    """ The mocked background_tasks dependency """
+    """The mocked background_tasks dependency"""
     return mocker.MagicMock(autospec=BackgroundTasks)
 
 
@@ -190,4 +190,3 @@ def section_task(section, task_schema, task_manager):
     task = task_manager.create(task_schema)
     yield task
     task_manager.delete(task)
-

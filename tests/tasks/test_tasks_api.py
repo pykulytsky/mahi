@@ -123,6 +123,3 @@ def test_remove_user_which_is_not_assigned(auth_client, task, another_user):
     res = auth_client.post(f"tasks/{task.id}/assign/{another_user.id}/remove")
 
     assert res.status_code == 400
-
-
-

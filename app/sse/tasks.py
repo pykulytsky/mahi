@@ -16,11 +16,13 @@ async def remind(task: Task) -> None:
         await asyncio.sleep(delay)
 
         await produce(
-            message=json.dumps({
-                "message_type": "remind",
-                "task": TaskRead.from_orm(task).dict(),
-                "timestamp": datetime.now().timestamp(),
-            }).encode("utf-8"),
+            message=json.dumps(
+                {
+                    "message_type": "remind",
+                    "task": TaskRead.from_orm(task).dict(),
+                    "timestamp": datetime.now().timestamp(),
+                }
+            ).encode("utf-8"),
             topic=f"personal_{task.project.owner_id}",
         )
 
@@ -33,20 +35,24 @@ async def deadline_remind(task: Task) -> None:
         await asyncio.sleep(delay)
 
         await produce(
-            message=json.dumps({
-                "message_type": "deadline",
-                "task": TaskRead.from_orm(task).dict(),
-                "timestamp": datetime.now().timestamp(),
-            }).encode("utf-8"),
+            message=json.dumps(
+                {
+                    "message_type": "deadline",
+                    "task": TaskRead.from_orm(task).dict(),
+                    "timestamp": datetime.now().timestamp(),
+                }
+            ).encode("utf-8"),
             topic=f"personal_{task.project.owner_id}",
         )
 
 
 async def project_invite(project: Project) -> None:
     await produce(
-        message=json.dumps({
-            "message_type": "invite",
-            "project": ProjectBase.from_orm(project).dict(),
-            "timestamp": datetime.now().timestamp(),
-        }).encode("utf-8")
+        message=json.dumps(
+            {
+                "message_type": "invite",
+                "project": ProjectBase.from_orm(project).dict(),
+                "timestamp": datetime.now().timestamp(),
+            }
+        ).encode("utf-8")
     )

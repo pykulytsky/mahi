@@ -134,9 +134,7 @@ async def remove_assign(
 ):
     assignee = user_manager.get(id=user_id)
     if assignee not in task.assigned_to:
-        raise HTTPException(
-            status_code=400, detail="User is not assigned to this task"
-        )
+        raise HTTPException(status_code=400, detail="User is not assigned to this task")
     return manager.remove_assignee(task, assignee)
 
 
