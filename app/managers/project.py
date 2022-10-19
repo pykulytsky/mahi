@@ -34,4 +34,4 @@ class ProjectManager(Manager):
             code = schemas.TokenPayload(**payload)
             return self.get(id=int(code.sub))
         except (jwt.PyJWTError, ValidationError):
-            raise HTTPException(status_code=403, detail="Wrong invitation code")
+            raise HTTPException(status_code=400, detail="Wrong invitation code")

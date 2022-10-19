@@ -1,8 +1,6 @@
 import asyncio
 from datetime import datetime
 
-from jwt.api_jwt import json
-
 from app.models import Task
 from app.models.project import Project, ProjectBase
 from app.models.task import TaskRead

@@ -1,6 +1,11 @@
+from datetime import date, timedelta
+
+import jwt
 import pytest
 
 from app.api.exceptions import WrongLoginCredentials
+from app.core import security
+from app.core.config import settings
 from app.managers.user import UserManager
 from app.models.user import UserCreate
 
@@ -53,3 +58,21 @@ def test_hasher(user_manager, user, mocker):
 
 def test_verify_password(user_manager, user):
     assert user_manager.verify_password("1234", user)
+
+
+@pytest.mark.freeze_time("2022-02-02")
+def test_generate_access_token_with_default_expires_delta(user_manager, user):
+    token = user_manager.generate_access_token(subject=user.id)
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[security.ALGORITHM])
+
+    assert date.fromtimestamp(payload["exp"]) - date(2022, 2, 2) == timedelta(days=7)
+
+
+@pytest.mark.freeze_time("2022-02-02")
+def test_generate_access_token_with_custom_expires_delta(user_manager, user):
+    token = user_manager.generate_access_token(
+        subject=user.id, expires_delta=timedelta(days=10)
+    )
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[security.ALGORITHM])
+
+    assert date.fromtimestamp(payload["exp"]) - date(2022, 2, 2) == timedelta(days=10)

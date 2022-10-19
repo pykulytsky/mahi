@@ -32,7 +32,7 @@ class UserManager(Manager):
             raise WrongLoginCredentials("No user with such email was found.")
 
     def generate_access_token(
-        self, subject: str, expires_delta: timedelta | None = None
+        self, subject: int, expires_delta: timedelta | None = None
     ) -> str:
         if expires_delta:
             expire = datetime.utcnow() + expires_delta

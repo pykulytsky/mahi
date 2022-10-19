@@ -80,8 +80,7 @@ async def consume(
             try:
                 key = msg.key.decode("utf-8")
                 counts[key] += 1
-                value = json.dumps(
-                    {"count": counts[key], "offset": msg.offset})
+                value = json.dumps({"count": counts[key], "offset": msg.offset})
                 await redis.hset(REDIS_HASH_KEY, key, value)
             except:  # noqa
                 pass

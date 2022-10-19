@@ -1,7 +1,9 @@
-import pytest
-from app.sse.kafka import RebalancerListener, serializer, deserializer
-import logging
 import asyncio
+import logging
+
+import pytest
+
+from app.sse.kafka import RebalancerListener, deserializer, serializer
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,22 +27,14 @@ async def test_rebalancer_logging(caplog):
 
 
 def test_kafka_produce_result_serializer():
-    message = {
-        "topic": "test",
-        "key": "1",
-        "value": "100"
-    }
+    message = {"topic": "test", "key": "1", "value": "100"}
 
     data = serializer(message)
     assert isinstance(data, bytes)
 
 
 def test_kafka_consume_deserializer():
-    message = {
-        "topic": "test",
-        "key": "1",
-        "value": "100"
-    }
+    message = {"topic": "test", "key": "1", "value": "100"}
 
     data = serializer(message)
     consumed_message = deserializer(data)
