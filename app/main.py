@@ -23,14 +23,15 @@ app.mount("/static/", StaticFiles(directory="app/static"), name="static")
 
 
 @app.exception_handler(ObjectDoesNotExist)
-async def object_not_found_handler(request: Request, exc: ObjectDoesNotExist):
+async def object_not_found_handler(_: Request, exc: ObjectDoesNotExist):
     return JSONResponse(status_code=404, content={"detail": exc.message})
 
 
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_origins=[str(origin)
+                       for origin in settings.BACKEND_CORS_ORIGINS],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -41,7 +42,6 @@ if settings.BACKEND_CORS_ORIGINS:
 async def on_startup() -> None:
     create_tables()
     await redis_plugin.init_app(app)
-    app.redis = aioredis.from_url("redis://localhost")
     await redis_plugin.init()
 
 
@@ -56,32 +56,6 @@ app.include_router(sse_router, prefix="/sse")
 
 STREAM_DELAY = 3  # second
 RETRY_TIMEOUT = 15000  # millisecond
-
-
-@app.get("/stream")
-async def message_stream(request: Request):
-    def new_messages():
-        # Add logic here to check for new messages
-        yield "Hello World"
-
-    async def event_generator():
-        while True:
-            # If client closes connection, stop sending events
-            if await request.is_disconnected():
-                break
-
-            # Checks for new messages and return them to client if any
-            if new_messages():
-                yield {
-                    "event": "new_message",
-                    "id": "message_id",
-                    "retry": RETRY_TIMEOUT,
-                    "data": "message_content",
-                }
-
-            await asyncio.sleep(STREAM_DELAY)
-
-    return EventSourceResponse(event_generator())
 
 
 @app.middleware("http")
