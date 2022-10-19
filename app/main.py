@@ -1,12 +1,9 @@
-import asyncio
 import time
 
-import aioredis
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi_plugins import redis_plugin
-from sse_starlette.sse import EventSourceResponse
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.api_v1.api import api_router

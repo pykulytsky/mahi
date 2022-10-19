@@ -1,6 +1,7 @@
 from typing import Generator
+from sqlmodel import SQLModel
+
 from app.db import create_tables, get_session
-from sqlmodel import SQLModel, Session
 
 
 def test_global_error_handling(auth_client):
