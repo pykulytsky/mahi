@@ -1,4 +1,9 @@
 import pytest
+from app.sse.kafka import RebalancerListener, serializer, deserializer
+import logging
+import asyncio
+
+LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.skip
@@ -8,3 +13,36 @@ def test_reminder(auth_client, task_schema, mock_backround_tasks):
 
     assert res.status_code == 201
     assert mock_backround_tasks.add_task.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_rebalancer_logging(caplog):
+    rebalancer = RebalancerListener(asyncio.Lock())
+    with caplog.at_level(logging.INFO):
+        await rebalancer.on_partitions_revoked(None)
+
+    assert "revoking, waiting on lock" in caplog.text
+
+
+def test_kafka_produce_result_serializer():
+    message = {
+        "topic": "test",
+        "key": "1",
+        "value": "100"
+    }
+
+    data = serializer(message)
+    assert isinstance(data, bytes)
+
+
+def test_kafka_consume_deserializer():
+    message = {
+        "topic": "test",
+        "key": "1",
+        "value": "100"
+    }
+
+    data = serializer(message)
+    consumed_message = deserializer(data)
+
+    assert consumed_message == message

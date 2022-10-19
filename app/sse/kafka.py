@@ -80,7 +80,8 @@ async def consume(
             try:
                 key = msg.key.decode("utf-8")
                 counts[key] += 1
-                value = json.dumps({"count": counts[key], "offset": msg.offset})
+                value = json.dumps(
+                    {"count": counts[key], "offset": msg.offset})
                 await redis.hset(REDIS_HASH_KEY, key, value)
             except:  # noqa
                 pass
@@ -118,7 +119,7 @@ async def consume_old(
 
 
 async def produce(
-    message: bytes, topic: str = "default", key: bytes = b"default"
+    message: str | dict, topic: str = "default", key: bytes = b"default"
 ) -> None:
     producer = AIOKafkaProducer(
         bootstrap_servers="localhost:9092", value_serializer=serializer
