@@ -88,6 +88,13 @@ class TaskCreate(TaskBase):
     owner_id: int | None = None
 
 
+class Asignee(SQLModel):
+    id: int
+    first_name: str
+    last_name: str
+    avatar: str | None = None
+
+
 class TaskRead(TaskBase):
     from app.models.reaction import ReactionRead
     from app.models.tag import TagRead
@@ -95,6 +102,7 @@ class TaskRead(TaskBase):
     id: int
     tags: list[TagRead]
     reactions: list[ReactionRead]
+    assigned_to: list[Asignee]
 
 
 class TaskReadDetail(TaskBase):

@@ -10,6 +10,12 @@ def test_tasks_api_works(client, task):
     assert "name" in data[0]
 
 
+def test_create_task_by_anon_user(task_schema, client):
+    res = client.post("tasks/", json=task_schema.dict())
+
+    assert res.status_code == 401
+
+
 def test_task_detail_api_by_owner(auth_client, task):
     res = auth_client.get(f"tasks/{task.id}")
     data = res.json()
