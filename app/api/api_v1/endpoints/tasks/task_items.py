@@ -200,7 +200,7 @@ async def reorder(
     task: Task = Permission("edit", router._get_item()),
     manager: TaskManager = Depends(TaskManager),
     project_manager: ProjectManager = Depends(ProjectManager),
-    section_manager: SectionManager = Depends(SectionManager)
+    section_manager: SectionManager = Depends(SectionManager),
 ):
     if in_data.container_type == "root":
         destination = project_manager.get(id=in_data.container_id)

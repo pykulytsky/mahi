@@ -20,6 +20,7 @@ from app.models.task import TaskCreate
 from app.models.user import UserCreate
 
 from .test_client import JWTAuthTestClient
+from app.schemas import Message
 
 
 @pytest.fixture
@@ -47,6 +48,21 @@ def db():
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
         yield session
+
+
+class Record:
+    def __init__(self, value: dict) -> None:
+        self.value = value
+
+
+def fake_consume(_):
+    async def gen():
+        yield Record(Message(event="test", body={}).dict())
+    return gen()
+
+
+async def fake_next(_):
+    raise StopAsyncIteration
 
 
 @pytest.fixture(scope="session")

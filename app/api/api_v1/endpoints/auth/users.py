@@ -3,7 +3,7 @@ from fastapi import Depends
 from app.api.deps import get_current_active_user
 from app.api.router import CrudRouter
 from app.managers import UserManager
-from app.models import User, UserCreate, UserRead, UserReadDetail, UserUpdate, UserEmail
+from app.models import User, UserCreate, UserEmail, UserRead, UserReadDetail, UserUpdate
 
 router = CrudRouter(
     model=User,
@@ -28,6 +28,6 @@ async def get_me(
 async def get_users_by_email(
     email: str,
     _: User = Depends(get_current_active_user),
-    manager: UserManager = Depends(UserManager)
+    manager: UserManager = Depends(UserManager),
 ):
-    return manager.filter(User.email.like('%' + email + '%'))
+    return manager.filter(User.email.like("%" + email + "%"))

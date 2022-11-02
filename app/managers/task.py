@@ -45,9 +45,7 @@ class TaskManager(Manager):
             if task.order >= order:
                 self.update(task.id, order=task.order + 1)
 
-    def reorder_source_task(
-            self, instance: Task
-    ):
+    def reorder_source_task(self, instance: Task):
         for task in instance.tasks:
             pass
 
@@ -70,7 +68,7 @@ class TaskManager(Manager):
             order=order,
             project_id=project_id,
             section_id=section_id,
-            parent_task_id=parent_task_id
+            parent_task_id=parent_task_id,
         )
 
     def delete(self, instance: Task):

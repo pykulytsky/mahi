@@ -34,7 +34,9 @@ class Project(ProjectBase, Timestamped, table=True):
         back_populates="participated_projects", link_model=Participant
     )
 
-    tasks: list["Task"] = Relationship(back_populates="project", sa_relationship_kwargs={"order_by": "Task.order"})
+    tasks: list["Task"] = Relationship(
+        back_populates="project", sa_relationship_kwargs={"order_by": "Task.order"}
+    )
     sections: list["Section"] = Relationship(back_populates="project")
 
     def __acl__(self):

@@ -62,7 +62,7 @@ async def subscribe(pubsub: client.PubSub) -> None:
 async def general_chanel(
     token: str,
     redis: Redis = Depends(depends_redis),
-    manager: UserManager = Depends(UserManager)
+    manager: UserManager = Depends(UserManager),
 ):
 
     user = deps.get_current_user(token, manager)
@@ -76,7 +76,7 @@ async def general_chanel(
 async def personal_chanel(
     token: str,
     redis: Redis = Depends(depends_redis),
-    manager: UserManager = Depends(UserManager)
+    manager: UserManager = Depends(UserManager),
 ):
 
     user = deps.get_current_user(token, manager)
@@ -115,9 +115,7 @@ async def general_chanel_v2(
 
 @sse_router.get("/v2/personal/{user_token}")
 async def personal_chanel_v2(
-    request: Request,
-    token: str,
-    manager: UserManager = Depends(UserManager)
+    request: Request, token: str, manager: UserManager = Depends(UserManager)
 ):
 
     user = deps.get_current_user(token, manager)
@@ -151,17 +149,13 @@ async def personal_chanel_v2(
 
 async def delayed_message():
     await asyncio.sleep(1)
-    await produce(message={"event": "members_status_update",
-                           "body": {
-                               "a": 1
-                           }},
-                  topic="general")
+    await produce(
+        message={"event": "members_status_update", "body": {"a": 1}}, topic="general"
+    )
 
 
 @sse_router.get("/test-general")
-async def test_general_chanel(
-    background_tasks: BackgroundTasks
-):
+async def test_general_chanel(background_tasks: BackgroundTasks):
     background_tasks.add_task(delayed_message)
     return ""
 
@@ -169,12 +163,7 @@ async def test_general_chanel(
 async def delayed_personal_message(user: User):
     await asyncio.sleep(1)
     await produce(
-        message={
-            "event": "members_status_update",
-            "body": {
-                "a": 1
-            }
-        },
+        message={"event": "members_status_update", "body": {"a": 1}},
         topic=f"personal_{user.id}",
     )
 
@@ -224,4 +213,5 @@ async def test_route():
             await asyncio.sleep(0.9)
             yield dict(data=i)
         print("finished")
+
     return EventSourceResponse(numbers(1, 10))

@@ -28,7 +28,9 @@ class Task(TaskBase, Timestamped, table=True):
     completed_at: datetime | None = Field(default=None)
 
     parent_task_id: int | None = Field(default=None, foreign_key="task.id")
-    tasks: list["Task"] = Relationship(sa_relationship_kwargs={"order_by": "Task.order"})
+    tasks: list["Task"] = Relationship(
+        sa_relationship_kwargs={"order_by": "Task.order"}
+    )
 
     project_id: int | None = Field(default=None, foreign_key="project.id")
     project: Optional["Project"] = Relationship(back_populates="tasks")

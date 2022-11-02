@@ -1,14 +1,15 @@
 import json
 import logging
 from collections import Counter
+
 from aiokafka import (
     AIOKafkaConsumer,
     AIOKafkaProducer,
     ConsumerRebalanceListener,
     TopicPartition,
 )
-from kafka import KafkaProducer
 from aioredis import Redis
+from kafka import KafkaProducer
 
 from app.models import User
 from app.schemas import Message
@@ -80,10 +81,7 @@ async def consume(
     try:
         async for msg in consumer:
             message = Message(**msg.value)
-            yield {
-                "event": message.event,
-                "data": message.body
-            }
+            yield {"event": message.event, "data": message.body}
             try:
                 key = msg.key.decode("utf-8")
                 counts[key] += 1
@@ -140,9 +138,7 @@ async def produce(
         await producer.stop()
 
 
-def produce_sync(
-    message: Message, topic: str = "default", key: bytes = b"default"
-):
+def produce_sync(message: Message, topic: str = "default", key: bytes = b"default"):
     producer = KafkaProducer(
         bootstrap_servers="localhost:9092", value_serializer=serializer
     )

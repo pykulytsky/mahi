@@ -1,19 +1,17 @@
 import json
-from fastapi_permissions import has_permission
-import redis
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi_plugins import depends_redis
-from aioredis import Redis
-from sse_starlette.sse import EventSourceResponse
-from aiokafka import (
-    AIOKafkaConsumer,
-    TopicPartition,
-)
 
-from app.managers import UserManager, ProjectManager
+import redis
+from aiokafka import AIOKafkaConsumer, TopicPartition
+from aioredis import Redis
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi_permissions import has_permission
+from fastapi_plugins import depends_redis
+from sse_starlette.sse import EventSourceResponse
+
 from app.api import deps
+from app.managers import ProjectManager, UserManager
 from app.schemas.events import Message
-from app.sse.kafka import produce, produce_sync, deserializer, load_initial_state
+from app.sse.kafka import deserializer, load_initial_state, produce, produce_sync
 
 
 async def set_online_status(redis: Redis, topic: str, user_id: int):
@@ -58,10 +56,7 @@ async def consume_project(
     try:
         async for msg in consumer:
             message = Message(**msg.value)
-            yield {
-                "event": message.event,
-                "data": message.body
-            }
+            yield {"event": message.event, "data": message.body}
             try:
                 key = msg.key.decode("utf-8")
                 counts[key] += 1

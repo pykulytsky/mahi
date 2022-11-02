@@ -23,7 +23,9 @@ class Section(SectionBase, Timestamped, table=True):
     project_id: int | None = Field(default=False, foreign_key="project.id")
     project: Optional["Project"] = Relationship(back_populates="sections")
 
-    tasks: list["Task"] = Relationship(back_populates="section", sa_relationship_kwargs={"order_by": "Task.order"})
+    tasks: list["Task"] = Relationship(
+        back_populates="section", sa_relationship_kwargs={"order_by": "Task.order"}
+    )
 
     def __acl__(self):
         acl_list = [
