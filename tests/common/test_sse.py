@@ -1,6 +1,7 @@
 import asyncio
 
 import anyio
+from fastapi_plugins.plugin import fastapi
 import pytest
 from aiokafka import AIOKafkaConsumer
 from fastapi.testclient import TestClient
@@ -41,20 +42,17 @@ def test_sync_event_source_response(input, expected):
     assert expected in response.content
 
 
+@pytest.mark.skipif(fastapi.__version__ < "0.82.0", reason="Missing eventloop in FastAPI dependencies")
 def test_general_channel(token, monkeypatch):
-    try:
-        monkeypatch.setattr(AIOKafkaConsumer, "__aiter__", fake_consume)
-        monkeypatch.setattr(AIOKafkaConsumer, "__anext__", fake_next)
+    monkeypatch.setattr(AIOKafkaConsumer, "__aiter__", fake_consume)
+    monkeypatch.setattr(AIOKafkaConsumer, "__anext__", fake_next)
 
-        token = token.decode("utf-8")
-        with TestClient(app) as client:
-            response = client.get(f"/sse/general/{token}")
+    token = token.decode("utf-8")
+    with TestClient(app) as client:
+        response = client.get(f"/sse/general/{token}")
 
-            assert response.status_code == 200
-            assert response.content == b"event: test\r\ndata: {}\r\n\r\n"
-
-    except RuntimeError:
-        pass
+        assert response.status_code == 200
+        assert response.content == b"event: test\r\ndata: {}\r\n\r\n"
 
 
 def test_general_channel_with_wrong_credentials():
@@ -64,6 +62,7 @@ def test_general_channel_with_wrong_credentials():
         assert response.status_code == 403
 
 
+@pytest.mark.skipif(fastapi.__version__ < "0.82.0", reason="Missing eventloop in FastAPI dependencies")
 def test_personal_chanel(token, monkeypatch):
     monkeypatch.setattr(AIOKafkaConsumer, "__aiter__", fake_consume)
     monkeypatch.setattr(AIOKafkaConsumer, "__anext__", fake_next)

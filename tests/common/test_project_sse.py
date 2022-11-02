@@ -1,3 +1,5 @@
+import pytest
+import fastapi
 from aiokafka import AIOKafkaConsumer
 from fastapi.testclient import TestClient
 
@@ -5,6 +7,7 @@ from app.main import app
 from tests.conftest import fake_consume, fake_next
 
 
+@pytest.mark.skipif(fastapi.__version__ < "0.82.0", reason="Missing eventloop in FastAPI dependencies")
 def test_project_room(token, monkeypatch, project):
     monkeypatch.setattr(AIOKafkaConsumer, "__aiter__", fake_consume)
     monkeypatch.setattr(AIOKafkaConsumer, "__anext__", fake_next)
