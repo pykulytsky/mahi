@@ -20,11 +20,15 @@ class TaskBase(SQLModel):
     remind_at: datetime | None = Field(default=None)
     is_completed: bool = Field(default=False)
     is_important: bool = Field(default=False)
+    is_collapsed: bool = Field(default=False)
 
 
 class Task(TaskBase, Timestamped, table=True):
     id: int | None = Field(default=None, primary_key=True)
     completed_at: datetime | None = Field(default=None)
+
+    parent_task_id: int | None = Field(default=None, foreign_key="task.id")
+    tasks: list["Task"] = Relationship(sa_relationship_kwargs={"order_by": "Task.order"})
 
     project_id: int | None = Field(default=None, foreign_key="project.id")
     project: Optional["Project"] = Relationship(back_populates="tasks")
@@ -48,6 +52,13 @@ class Task(TaskBase, Timestamped, table=True):
             (Allow, f"user:{self.owner_id}", "delete"),
         ]
         if self.project:
+            acl_list.extend(
+                [
+                    (Allow, f"user:{self.project.owner_id}", "view"),
+                    (Allow, f"user:{self.project.owner_id}", "edit"),
+                    (Allow, f"user:{self.project.owner_id}", "complete"),
+                ]
+            )
             for p in self.project.participants:
                 if p.id != self.id:
                     acl_list.extend(
@@ -84,6 +95,7 @@ class Task(TaskBase, Timestamped, table=True):
 class TaskCreate(TaskBase):
     order: int | None = None
     project_id: int | None = None
+    parent_task_id: int | None = None
     section_id: int | None = None
     owner_id: int | None = None
 
@@ -101,6 +113,8 @@ class TaskRead(TaskBase):
 
     id: int
     tags: list[TagRead]
+    parent_task_id: int | None = None
+    tasks: list["TaskRead"]
     reactions: list[ReactionRead]
     assigned_to: list[Asignee]
 
@@ -113,6 +127,8 @@ class TaskReadDetail(TaskBase):
 
     id: int
     section: SectionRead | None = None
+    parent_task_id: int | None = None
+    tasks: list["TaskRead"]
     tags: list[TagRead]
     reactions: list[ReactionRead]
     owner: UserRead | None = None
@@ -125,8 +141,10 @@ class TaskUpdate(SQLModel):
     order: int | None = None
     project_id: int | None = None
     section_id: int | None = None
+    parent_task_id: int | None = None
     is_completed: bool | None = False
     is_important: bool | None = False
+    is_collapsed: bool | None = False
     deadline: date | None = None
     remind_at: datetime | None = None
 
@@ -137,6 +155,12 @@ class TaskReorder(SQLModel):
     destination_id: int
     destination_type: str
     order: int
+
+
+class Reorder(SQLModel):
+    order: int
+    container_id: int
+    container_type: str
 
 
 @event.listens_for(Task.is_completed, "set")

@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException
+from pydantic import EmailStr
 from sqlmodel import Session
 
 from app.api.deps import Permission, get_current_active_user
@@ -72,14 +73,14 @@ async def accept_invitation(
         )
 
 
-@router.get("/{id}/direct-invite/{user_id}", response_model=ProjectReadDetail)
+@router.get("/{id}/direct-invite/{email}", response_model=ProjectReadDetail)
 async def send_direct_invitation(
-    user_id: int,
+    email: EmailStr,
     project: Project = Permission("invite", router._get_item()),
     db: Session = Depends(get_session),
     user_manager: UserManager = Depends(UserManager),
 ):
-    target_user = user_manager.get(id=user_id)
+    target_user = user_manager.one(User.email == email)
     if target_user not in project.participants and target_user != project.owner:
         project.participants.append(target_user)
         db.commit()
@@ -89,4 +90,24 @@ async def send_direct_invitation(
         raise HTTPException(
             status_code=404,
             detail="Current user is already participant of this project",
+        )
+
+
+@router.post("/{id}/remove-user/{email}", response_model=ProjectReadDetail)
+async def remove_user_from_project(
+    email: EmailStr,
+    project: Project = Permission("invite", router._get_item()),
+    db: Session = Depends(get_session),
+    user_manager: UserManager = Depends(UserManager),
+):
+    target_user = user_manager.one(User.email == email)
+    if target_user in project.participants and target_user != project.owner:
+        project.participants.remove(target_user)
+        db.commit()
+        db.refresh(project)
+        return project
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail="User is not participant of this project",
         )

@@ -34,6 +34,8 @@ sqlmodel = "^0.0.8"
 sse-starlette = "^1.1.6"
 uvicorn = "^0.18.2"
 websockets = "^10.3"
+redis = {extras = ["hiredis"], version = "^4.3.4"}
+kafka-python = "^2.0.2"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"

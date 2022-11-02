@@ -1,5 +1,6 @@
 from app.models import Task, TaskCreate
 from app.models.reaction import ReactionBase, ReactionCreate
+from app.models.section import Section
 from app.models.tag import Tag
 from app.models.user import User
 
@@ -14,10 +15,15 @@ class TaskManager(Manager):
     in_schema: TaskCreate
 
     def create(self, object: TaskCreate):
-        parent_manager = SectionManager if object.section_id else ProjectManager
-        id = object.section_id or object.project_id
+        if object.parent_task_id:
+            parent_manager = self
+        elif object.section_id:
+            parent_manager = SectionManager(self.session)
+        else:
+            parent_manager = ProjectManager(self.session)
+        id = object.section_id or object.project_id or object.parent_task_id
         order = object.order if object.order else 0
-        for task in parent_manager(self.session).get(id=id).tasks:
+        for task in parent_manager.get(id=id).tasks:
             if task.order >= order:
                 self.update(task.id, order=task.order + 1)
         return super().create(object=object)
@@ -26,7 +32,10 @@ class TaskManager(Manager):
         self,
         instance,
     ):
-        source = instance.section or instance.project
+        if instance.parent_task_id:
+            source = self.get(id=instance.parent_task_id)
+        else:
+            source = instance.section or instance.project
         for task in source.tasks:
             if task.order > instance.order:
                 self.update(task.id, order=task.order - 1)
@@ -36,23 +45,39 @@ class TaskManager(Manager):
             if task.order >= order:
                 self.update(task.id, order=task.order + 1)
 
+    def reorder_source_task(
+            self, instance: Task
+    ):
+        for task in instance.tasks:
+            pass
+
     def reorder(self, instance, destination, order: int):
         self.reorder_source(instance)
         self.reorder_destination(order, destination)
-        project_id, section_id = (
-            (destination.id, None)
-            if isinstance(destination, Project)
-            else (None, destination.id)
-        )
+
+        parent_task_id = None
+        if isinstance(destination, Task):
+            parent_task_id = destination.id
+        project_id = None
+        if isinstance(destination, Project):
+            project_id = destination.id
+        section_id = None
+        if isinstance(destination, Section):
+            section_id = destination.id
+
         return self.update(
             id=instance.id,
             order=order,
             project_id=project_id,
             section_id=section_id,
+            parent_task_id=parent_task_id
         )
 
-    def delete(self, instance):
-        model = instance.section or instance.project
+    def delete(self, instance: Task):
+        if instance.parent_task_id:
+            model = self.get(id=instance.parent_task_id)
+        else:
+            model = instance.section or instance.project
         for task in model.tasks:
             if task.order > instance.order:
                 self.update(task.id, order=task.order - 1)

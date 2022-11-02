@@ -18,6 +18,7 @@ from app.models import (
     TaskUpdate,
     User,
 )
+from app.models.task import Reorder
 from app.sse.tasks import deadline_remind, remind
 
 router = PermissionedCrudRouter(
@@ -80,7 +81,7 @@ async def move_task_to_proejct(
         raise HTTPException(status_code=400, detail="Authentication error")
 
 
-@router.post("/{order}/reorder/", response_model=TaskRead)
+@router.post("/{order}/reorder/v2", response_model=TaskRead)
 async def reorder_tasks(
     order: str | int,
     reorder_schema: TaskReorder,
@@ -191,3 +192,20 @@ async def remove_tag(
             status_code=400, detail=f"Tag with id {tag.id} is not applied to this task"
         )
     return task_manager.remove_tag(tag, task)
+
+
+@router.post("/{id}/reorder", response_model=Task)
+async def reorder(
+    in_data: Reorder,
+    task: Task = Permission("edit", router._get_item()),
+    manager: TaskManager = Depends(TaskManager),
+    project_manager: ProjectManager = Depends(ProjectManager),
+    section_manager: SectionManager = Depends(SectionManager)
+):
+    if in_data.container_type == "root":
+        destination = project_manager.get(id=in_data.container_id)
+    elif in_data.container_type == "task":
+        destination = manager.get(id=in_data.container_id)
+    else:
+        destination = section_manager.get(id=in_data.container_id)
+    return manager.reorder(task, destination, in_data.order)
