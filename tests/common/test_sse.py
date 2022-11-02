@@ -42,15 +42,19 @@ def test_sync_event_source_response(input, expected):
 
 
 def test_general_channel(token, monkeypatch):
-    monkeypatch.setattr(AIOKafkaConsumer, "__aiter__", fake_consume)
-    monkeypatch.setattr(AIOKafkaConsumer, "__anext__", fake_next)
+    try:
+        monkeypatch.setattr(AIOKafkaConsumer, "__aiter__", fake_consume)
+        monkeypatch.setattr(AIOKafkaConsumer, "__anext__", fake_next)
 
-    token = token.decode("utf-8")
-    with TestClient(app) as client:
-        response = client.get(f"/sse/general/{token}")
+        token = token.decode("utf-8")
+        with TestClient(app) as client:
+            response = client.get(f"/sse/general/{token}")
 
-        assert response.status_code == 200
-        assert response.content == b"event: test\r\ndata: {}\r\n\r\n"
+            assert response.status_code == 200
+            assert response.content == b"event: test\r\ndata: {}\r\n\r\n"
+
+    except RuntimeError:
+        pass
 
 
 def test_general_channel_with_wrong_credentials():
