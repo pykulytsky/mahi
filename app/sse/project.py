@@ -63,7 +63,7 @@ async def consume_project(
                 value = json.dumps({"count": counts[key], "offset": msg.offset})
                 await redis.hset(REDIS_HASH_KEY, key, value)
             except:  # noqa
-                pass
+                continue
     finally:
         remove_online_status(f"project_{project_id}", user_id)
         await consumer.stop()

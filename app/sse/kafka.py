@@ -88,7 +88,7 @@ async def consume(
                 value = json.dumps({"count": counts[key], "offset": msg.offset})
                 await redis.hset(REDIS_HASH_KEY, key, value)
             except:  # noqa
-                pass
+                continue
     finally:
         await consumer.stop()
 
