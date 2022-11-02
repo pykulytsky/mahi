@@ -57,7 +57,9 @@ class Record:
 
 def fake_consume(_):
     async def gen():
-        yield Record(Message(event="test", body={}).dict())
+        record = Record(Message(event="test", body={}).dict())
+        yield record
+        del record
 
     return gen()
 
