@@ -18,9 +18,9 @@ from app.models.section import SectionCreate
 from app.models.tag import TagCreate
 from app.models.task import TaskCreate
 from app.models.user import UserCreate
+from app.schemas import Message
 
 from .test_client import JWTAuthTestClient
-from app.schemas import Message
 
 
 @pytest.fixture
@@ -58,6 +58,7 @@ class Record:
 def fake_consume(_):
     async def gen():
         yield Record(Message(event="test", body={}).dict())
+
     return gen()
 
 

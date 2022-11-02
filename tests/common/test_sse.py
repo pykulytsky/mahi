@@ -1,10 +1,12 @@
-from aiokafka import AIOKafkaConsumer
+import asyncio
+
 import anyio
 import pytest
-import asyncio
+from aiokafka import AIOKafkaConsumer
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 from sse_starlette import EventSourceResponse
+
 from app.main import app
 from tests.conftest import fake_consume, fake_next
 
@@ -48,7 +50,7 @@ def test_general_channel(token, monkeypatch):
         response = client.get(f"/sse/general/{token}")
 
         assert response.status_code == 200
-        assert response.content == b'event: test\r\ndata: {}\r\n\r\n'
+        assert response.content == b"event: test\r\ndata: {}\r\n\r\n"
 
 
 def test_general_channel_with_wrong_credentials():
@@ -67,7 +69,7 @@ def test_personal_chanel(token, monkeypatch):
         response = client.get(f"/sse/personal/{token}")
 
         assert response.status_code == 200
-        assert response.content == b'event: test\r\ndata: {}\r\n\r\n'
+        assert response.content == b"event: test\r\ndata: {}\r\n\r\n"
 
 
 def test_personal_channel_with_wrong_credentials():
