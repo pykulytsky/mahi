@@ -71,15 +71,15 @@ class Task(TaskBase, Timestamped, table=True):
             (Allow, f"user:{self.owner_id}", "complete"),
             (Allow, f"user:{self.owner_id}", "delete"),
         ]
-        if self.project:
+        if self.parent_container:
             acl_list.extend(
                 [
-                    (Allow, f"user:{self.project.owner_id}", "view"),
-                    (Allow, f"user:{self.project.owner_id}", "edit"),
-                    (Allow, f"user:{self.project.owner_id}", "complete"),
+                    (Allow, f"user:{self.parent_container.owner_id}", "view"),
+                    (Allow, f"user:{self.parent_container.owner_id}", "edit"),
+                    (Allow, f"user:{self.parent_container.owner_id}", "complete"),
                 ]
             )
-            for p in self.project.participants:
+            for p in self.parent_container.participants:
                 if p.id != self.id:
                     acl_list.extend(
                         [
