@@ -186,6 +186,18 @@ def task(task_manager, task_schema):
 
 
 @pytest.fixture
+def subtask_schema(task, user):
+    return TaskCreate(name="Test task", parent_task_id=task.id, owner_id=user.id)
+
+
+@pytest.fixture
+def subtask(task_manager, subtask_schema):
+    task = task_manager.create(subtask_schema)
+    yield task
+    task_manager.delete(task)
+
+
+@pytest.fixture
 def tag_manager(db):
     return TagManager(db)
 

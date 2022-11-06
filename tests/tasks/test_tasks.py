@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+import pytest
+
 from app.models import TaskCreate
 from app.models.reaction import ReactionBase
 
@@ -53,22 +55,6 @@ def test_project_participants_have_permissions_for_included_tasks(
     assert ("Allow", f"user:{another_user.id}", "assign") not in task.__acl__()
 
 
-def test_project_participants_have_permissions_for_section_included_tasks(
-    project, another_user, db, section_task
-):
-    project.participants.append(another_user)
-    db.add(project)
-    db.commit()
-    db.refresh(project)
-
-    assert ("Allow", f"user:{another_user.id}", "view") in section_task.__acl__()
-    assert ("Allow", f"user:{another_user.id}", "edit") in section_task.__acl__()
-    assert ("Allow", f"user:{another_user.id}", "complete") in section_task.__acl__()
-
-    assert ("Allow", f"user:{another_user.id}", "delete") not in section_task.__acl__()
-    assert ("Allow", f"user:{another_user.id}", "assign") not in section_task.__acl__()
-
-
 def test_task_assignee_has_full_permissions_list(task, another_user, db):
     task.assigned_to.append(another_user)
     db.add(task)
@@ -105,3 +91,46 @@ def test_remove_reaction(task_manager, task, user):
     )
 
     assert len(task.reactions) == 0
+
+
+def test_resolve_parent_container_which_is_directly_in_project(task):
+    assert task.parent_container == task.project
+
+
+def test_resolve_parent_container_for_subtask(subtask):
+    assert subtask.parent_container == subtask.parent.project
+
+
+def create_nested_task(task_manager, subtask_schema, parent_task_id: int):
+    subtask_schema.parent_task_id = parent_task_id
+    task = task_manager.create(subtask_schema)
+    yield task
+    task_manager.delete(task)
+
+
+@pytest.fixture(scope="function")
+def nested_task(request, task_manager, subtask_schema, task):
+    target = task
+    for _ in range(request.param):
+        target = next(create_nested_task(task_manager, subtask_schema, target.id))
+    return target
+
+
+@pytest.fixture(scope="function")
+def container(request, project):
+    _ = request
+    return project
+
+
+@pytest.mark.parametrize(
+    "nested_task, container",
+    [
+        (1, None),
+        (2, None),
+        (3, None),
+        (4, None),
+    ],
+    indirect=["nested_task", "container"]
+)
+def test_resolve_parent_container_for_deeply_nested_task(nested_task, container):
+    assert nested_task.parent_container == container

@@ -28,8 +28,17 @@ class Task(TaskBase, Timestamped, table=True):
     completed_at: datetime | None = Field(default=None)
 
     parent_task_id: int | None = Field(default=None, foreign_key="task.id")
+    parent: Optional['Task'] = Relationship(
+        back_populates='tasks',
+        sa_relationship_kwargs=dict(
+            remote_side='Task.id'
+        )
+    )
     tasks: list["Task"] = Relationship(
-        sa_relationship_kwargs={"order_by": "Task.order"}
+        sa_relationship_kwargs={
+            "order_by": "Task.order",
+        },
+        back_populates="parent"
     )
 
     project_id: int | None = Field(default=None, foreign_key="project.id")
@@ -44,6 +53,18 @@ class Task(TaskBase, Timestamped, table=True):
     assigned_to: list["User"] = Relationship(
         back_populates="assigned_tasks", link_model=Assignee
     )
+
+    @property
+    def parent_container(self) -> Optional["Project"]:
+        if not self.parent:
+            return self.project
+
+        parent = self.parent
+        while parent:
+            if parent.parent:
+                parent = parent.parent
+            else:
+                return parent.project
 
     def __acl__(self):
         acl_list = [
@@ -62,16 +83,6 @@ class Task(TaskBase, Timestamped, table=True):
                 ]
             )
             for p in self.project.participants:
-                if p.id != self.id:
-                    acl_list.extend(
-                        [
-                            (Allow, f"user:{p.id}", "view"),
-                            (Allow, f"user:{p.id}", "edit"),
-                            (Allow, f"user:{p.id}", "complete"),
-                        ]
-                    )
-        elif self.section:
-            for p in self.section.project.participants:
                 if p.id != self.id:
                     acl_list.extend(
                         [

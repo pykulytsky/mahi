@@ -1,5 +1,5 @@
+from datetime import datetime, timedelta
 import json
-
 import redis
 from aiokafka import AIOKafkaConsumer, TopicPartition
 from aioredis import Redis
@@ -17,8 +17,8 @@ from app.sse.kafka import deserializer, load_initial_state, produce, produce_syn
 async def set_online_status(redis: Redis, topic: str, user_id: int):
     """Add user id from set of id's of active users."""
     await redis.sadd(f"{topic}_members", user_id)
-    members = await redis.smembers(f"{topic}_members")
-    message = Message(event="members_status_update", body={"members": str(members)})
+    members = map(lambda item: int(item), await redis.smembers(f"{topic}_members"),)
+    message = Message(event="members_status_update", body={"members": str(list(members))})
     await produce(message, topic)
 
 
@@ -26,8 +26,8 @@ def remove_online_status(topic: str, user_id: int):
     """Delete user id from set of id's of active users."""
     r = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
     r.srem(f"{topic}_members", user_id)
-    members = r.smembers(f"{topic}_members")
-    message = Message(event="members_status_update", body={"members": str(members)})
+    members = map(lambda item: int(item), r.smembers(f"{topic}_members"),)
+    message = Message(event="members_status_update", body={"members": str(list(members))})
     produce_sync(message, topic)
 
 
@@ -56,14 +56,17 @@ async def consume_project(
     try:
         async for msg in consumer:
             message = Message(**msg.value)
-            yield {"event": message.event, "data": message.body}
-            try:
-                key = msg.key.decode("utf-8")
-                counts[key] += 1
-                value = json.dumps({"count": counts[key], "offset": msg.offset})
-                await redis.hset(REDIS_HASH_KEY, key, value)
-            except:  # noqa
-                continue
+            dt = datetime.strptime(message.dt, "%Y-%m-%d %H:%M:%S.%f")
+            if dt - datetime.now() < timedelta(seconds=60):
+                body = message.body
+                yield {"event": message.event, "data": body}
+                try:
+                    key = msg.key.decode("utf-8")
+                    counts[key] += 1
+                    value = json.dumps({"count": counts[key], "offset": msg.offset})
+                    await redis.hset(REDIS_HASH_KEY, key, value)
+                except:  # noqa
+                    pass
     finally:
         remove_online_status(f"project_{project_id}", user_id)
         await consumer.stop()
@@ -72,7 +75,7 @@ async def consume_project(
 project_sse_router = APIRouter(prefix="/project", tags=["project"])
 
 
-@project_sse_router.get("/{id}/{token}")
+@ project_sse_router.get("/{id}/{token}")
 async def project_chanel(
     id: int,
     token: str,
