@@ -1,5 +1,6 @@
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
+
 import redis
 from aiokafka import AIOKafkaConsumer, TopicPartition
 from aioredis import Redis
@@ -17,8 +18,13 @@ from app.sse.kafka import deserializer, load_initial_state, produce, produce_syn
 async def set_online_status(redis: Redis, topic: str, user_id: int):
     """Add user id from set of id's of active users."""
     await redis.sadd(f"{topic}_members", user_id)
-    members = map(lambda item: int(item), await redis.smembers(f"{topic}_members"),)
-    message = Message(event="members_status_update", body={"members": str(list(members))})
+    members = map(
+        lambda item: int(item),
+        await redis.smembers(f"{topic}_members"),
+    )
+    message = Message(
+        event="members_status_update", body={"members": str(list(members))}
+    )
     await produce(message, topic)
 
 
@@ -26,8 +32,13 @@ def remove_online_status(topic: str, user_id: int):
     """Delete user id from set of id's of active users."""
     r = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
     r.srem(f"{topic}_members", user_id)
-    members = map(lambda item: int(item), r.smembers(f"{topic}_members"),)
-    message = Message(event="members_status_update", body={"members": str(list(members))})
+    members = map(
+        lambda item: int(item),
+        r.smembers(f"{topic}_members"),
+    )
+    message = Message(
+        event="members_status_update", body={"members": str(list(members))}
+    )
     produce_sync(message, topic)
 
 
@@ -75,7 +86,7 @@ async def consume_project(
 project_sse_router = APIRouter(prefix="/project", tags=["project"])
 
 
-@ project_sse_router.get("/{id}/{token}")
+@project_sse_router.get("/{id}/{token}")
 async def project_chanel(
     id: int,
     token: str,

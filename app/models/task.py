@@ -28,17 +28,14 @@ class Task(TaskBase, Timestamped, table=True):
     completed_at: datetime | None = Field(default=None)
 
     parent_task_id: int | None = Field(default=None, foreign_key="task.id")
-    parent: Optional['Task'] = Relationship(
-        back_populates='tasks',
-        sa_relationship_kwargs=dict(
-            remote_side='Task.id'
-        )
+    parent: Optional["Task"] = Relationship(
+        back_populates="tasks", sa_relationship_kwargs=dict(remote_side="Task.id")
     )
     tasks: list["Task"] = Relationship(
         sa_relationship_kwargs={
             "order_by": "Task.order",
         },
-        back_populates="parent"
+        back_populates="parent",
     )
 
     project_id: int | None = Field(default=None, foreign_key="project.id")

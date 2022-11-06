@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 
 import pytest
+from sqlmodel import select
 
 from app.models import TaskCreate
 from app.models.reaction import ReactionBase
+from app.models.task import Task
 
 
 def test_task_update_completed_at_when_tash_is_been_completed(task_manager, project):
@@ -130,7 +132,12 @@ def container(request, project):
         (3, None),
         (4, None),
     ],
-    indirect=["nested_task", "container"]
+    indirect=["nested_task", "container"],
 )
-def test_resolve_parent_container_for_deeply_nested_task(nested_task, container):
+def test_resolve_parent_container_for_deeply_nested_task(nested_task, container, db):
     assert nested_task.parent_container == container
+
+    statement = select(Task)
+    results = db.exec(statement)
+    for task in results:
+        db.delete(task)

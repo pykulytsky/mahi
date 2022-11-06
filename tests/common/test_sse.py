@@ -1,10 +1,10 @@
 import asyncio
 
 import anyio
-from fastapi_plugins.plugin import fastapi
 import pytest
 from aiokafka import AIOKafkaConsumer
 from fastapi.testclient import TestClient
+from fastapi_plugins.plugin import fastapi
 from httpx import AsyncClient
 from sse_starlette import EventSourceResponse
 
@@ -42,7 +42,9 @@ def test_sync_event_source_response(input, expected):
     assert expected in response.content
 
 
-@pytest.mark.skipif(fastapi.__version__ < "0.82.0", reason="Missing eventloop in FastAPI dependencies")
+@pytest.mark.skipif(
+    fastapi.__version__ < "0.82.0", reason="Missing eventloop in FastAPI dependencies"
+)
 def test_general_channel(token, monkeypatch):
     monkeypatch.setattr(AIOKafkaConsumer, "__aiter__", fake_consume)
     monkeypatch.setattr(AIOKafkaConsumer, "__anext__", fake_next)
@@ -62,7 +64,9 @@ def test_general_channel_with_wrong_credentials():
         assert response.status_code == 403
 
 
-@pytest.mark.skipif(fastapi.__version__ < "0.82.0", reason="Missing eventloop in FastAPI dependencies")
+@pytest.mark.skipif(
+    fastapi.__version__ < "0.82.0", reason="Missing eventloop in FastAPI dependencies"
+)
 def test_personal_chanel(token, monkeypatch):
     monkeypatch.setattr(AIOKafkaConsumer, "__aiter__", fake_consume)
     monkeypatch.setattr(AIOKafkaConsumer, "__anext__", fake_next)
