@@ -1,8 +1,8 @@
 FROM python:3.10-slim-buster
 
-RUN apt update && apt install --no-install-recommends -y gcc libc6-dev libpq-dev && rm -rf /var/lib/{apt,dpkg,cache,log}/
+RUN apt-get update && apt-get install --no-install-recommends -y gcc libc6-dev libpq-dev && rm -rf /var/lib/{apt,dpkg,cache,log}/
 
-RUN pip install poetry==1.1.5
+RUN pip install --no-cache-dir poetry==1.1.5
 
 WORKDIR /app
 

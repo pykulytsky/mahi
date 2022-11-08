@@ -71,13 +71,10 @@ async def consume_project(
             if dt - datetime.now() < timedelta(seconds=60):
                 body = message.body
                 yield {"event": message.event, "data": body}
-                try:
-                    key = msg.key.decode("utf-8")
-                    counts[key] += 1
-                    value = json.dumps({"count": counts[key], "offset": msg.offset})
-                    await redis.hset(REDIS_HASH_KEY, key, value)
-                except:  # noqa
-                    pass
+                key = msg.key.decode("utf-8")
+                counts[key] += 1
+                value = json.dumps({"count": counts[key], "offset": msg.offset})
+                await redis.hset(REDIS_HASH_KEY, key, value)
     finally:
         remove_online_status(f"project_{project_id}", user_id)
         await consumer.stop()

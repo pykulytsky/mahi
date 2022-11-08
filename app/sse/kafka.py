@@ -82,13 +82,10 @@ async def consume(
         async for msg in consumer:
             message = Message(**msg.value)
             yield {"event": message.event, "data": message.body}
-            try:
-                key = msg.key.decode("utf-8")
-                counts[key] += 1
-                value = json.dumps({"count": counts[key], "offset": msg.offset})
-                await redis.hset(REDIS_HASH_KEY, key, value)
-            except:  # noqa
-                pass
+            key = msg.key.decode("utf-8")
+            counts[key] += 1
+            value = json.dumps({"count": counts[key], "offset": msg.offset})
+            await redis.hset(REDIS_HASH_KEY, key, value)
     finally:
         await consumer.stop()
 
