@@ -1,6 +1,6 @@
-from fastapi_permissions import Authenticated, Everyone
 import pytest
 from fastapi.exceptions import HTTPException
+from fastapi_permissions import Authenticated, Everyone
 
 from app.api import deps
 from app.models.user import User
@@ -55,11 +55,20 @@ def test_principals_of_unauthorized_user():
 
 
 def test_principals_of_authorized_user(another_user):
-    assert deps.get_active_user_principals(another_user) == [Everyone, Authenticated, f"user:{another_user.id}"]
+    assert deps.get_active_user_principals(another_user) == [
+        Everyone,
+        Authenticated,
+        f"user:{another_user.id}",
+    ]
 
 
 def test_principals_of_superuser(superuser):
-    assert deps.get_active_user_principals(superuser) == [Everyone, Authenticated, f"user:{superuser.id}", "role:superuser"]
+    assert deps.get_active_user_principals(superuser) == [
+        Everyone,
+        Authenticated,
+        f"user:{superuser.id}",
+        "role:superuser",
+    ]
 
 
 def test_unverified_user(another_user):
@@ -69,4 +78,3 @@ def test_unverified_user(another_user):
 
 def test_verified_user(user):
     assert deps.get_current_verified_user(user) == user
-
