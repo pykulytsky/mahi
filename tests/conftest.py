@@ -101,6 +101,12 @@ def user(user_manager, user_schema):
     user_manager.delete(user)
 
 
+@pytest.fixture(scope="function")
+def superuser(user_manager, user):
+    yield user_manager.update(user.id, is_superuser=True)
+    user_manager.update(user.id, is_superuser=False)
+
+
 @pytest.fixture()
 def another_user(user_manager, another_user_schema):
     user = user_manager.create(another_user_schema)

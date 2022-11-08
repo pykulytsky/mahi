@@ -111,3 +111,7 @@ def test_delete_route(router):
     assert route.summary == "Delete task"
     assert route.path == "/test/{id}"
     assert route.methods == {"DELETE"}
+
+
+def test_defined_router_prefix(router):
+    assert router.prefix == "/test"

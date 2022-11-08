@@ -132,9 +132,7 @@ def test_remove_user_which_is_not_assigned(auth_client, task, another_user):
 
 
 def test_apply_reaction(auth_client, task):
-    res = auth_client.post(f"tasks/{task.id}/reactions", json={
-        'emoji': "😀"
-    })
+    res = auth_client.post(f"tasks/{task.id}/reactions", json={"emoji": "😀"})
 
     assert res.status_code == 201
     assert res.json()["id"] == task.id
@@ -142,9 +140,7 @@ def test_apply_reaction(auth_client, task):
 
 
 def test_apply_reaction_returns_proper_users_list(auth_client, task):
-    res = auth_client.post(f"tasks/{task.id}/reactions", json={
-        'emoji': "😀"
-    })
+    res = auth_client.post(f"tasks/{task.id}/reactions", json={"emoji": "😀"})
 
     assert len(res.json()["reactions"]) == 1
     assert len(res.json()["reactions"][0]["users"]) == 1
