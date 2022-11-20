@@ -1,8 +1,8 @@
 import pytest
 
-from app.models import User
+from app.managers.user import UserManager
 
 
 @pytest.fixture
 def manager(db):
-    return User
+    return UserManager(db)

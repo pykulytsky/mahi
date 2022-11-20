@@ -1,8 +1,6 @@
 import pytest
 
-
-class SomeClass:
-    pass
+from app.models import User, UserCreate
 
 
 def test_manager_all(manager, user):
@@ -13,36 +11,39 @@ def test_manager_get(user, manager):
     assert manager.get(id=user.id) == user
 
 
-def test_use_unsuported_fields(user, manager):
-    with pytest.raises(ValueError):
-        manager.get(wrong_field_name="")
-
-
 def test_get_with_multiply_fields(manager, user):
-    assert manager.get(id=user.id, email=user.email, first_name=user.first_name) == user
-
-
-def test_filter(manager, user):
     assert (
-        manager.filter(id=user.id, email=user.email, first_name=user.first_name)[0]
+        manager.one(
+            User.id == user.id,
+            User.email == user.email,
+            User.first_name == user.first_name,
+        )
         == user
     )
 
 
-def test_check_fields(mocker, manager, user):
-    mocker.patch("app.managers.base.BaseManager.check_fields")
-
-    manager.get(id=user.id)
-
-    manager.check_fields.assert_called_once_with(id=user.id)
+def test_filter(manager, user):
+    assert (
+        manager.filter(
+            User.id == user.id,
+            User.email == user.email,
+            User.first_name == user.first_name,
+        )[0]
+        == user
+    )
 
 
 def test_create(manager):
     user = manager.create(
-        email="world", password="!!!", first_name="test", last_name="tetest"
+        UserCreate(
+            email="world@hello.com",
+            password="!!!",
+            first_name="test",
+            last_name="tetest",
+        )
     )
 
-    assert manager.exists(email="world", first_name="test")
+    assert manager.exists(User.email == "world@hello.com", User.first_name == "test")
 
     manager.delete(user)
 
@@ -72,5 +73,5 @@ def test_update(manager, user):
 
 
 def test_instance_exists(manager, user):
-    assert manager.exists(id=user.id)
-    assert not manager.exists(id=123243444433443)
+    assert manager.exists(User.id == user.id)
+    assert not manager.exists(User.id == 123243444433443)

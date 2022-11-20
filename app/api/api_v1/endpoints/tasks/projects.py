@@ -1,97 +1,113 @@
 from fastapi import Depends, HTTPException
-from fastapi_sqlalchemy import db
+from pydantic import EmailStr
+from sqlmodel import Session
 
-from app import schemas
 from app.api.deps import Permission, get_current_active_user
-from app.api.router import AuthenticatedCrudRouter
-from app.models import Project, Task, User
+from app.api.router import PermissionedCrudRouter
+from app.db import get_session
+from app.managers import ProjectManager
+from app.managers.user import UserManager
+from app.models import (
+    Project,
+    ProjectCreate,
+    ProjectRead,
+    ProjectReadDetail,
+    ProjectUpdate,
+    User,
+)
 
-router = AuthenticatedCrudRouter(
+router = PermissionedCrudRouter(
     model=Project,
-    get_schema=schemas.Project,
-    create_schema=schemas.ProjectCreate,
-    update_schema=schemas.ProjectUpdate,
+    manager=ProjectManager,
+    get_schema=ProjectRead,
+    detail_schema=ProjectReadDetail,
+    create_schema=ProjectCreate,
+    update_schema=ProjectUpdate,
     prefix="/projects",
     tags=["task"],
     owner_field_is_required=True,
 )
 
 
-def get_project_from_db(id):
-    return schemas.Project.from_orm(Project.get(id=id))
-
-
-@router.get("/{id}")
-async def get_project(
-    project: schemas.Project = Permission("view", get_project_from_db)
-):
-    return project
-
-
-@router.patch("/{id}", response_model=schemas.Project)
-async def update_project(
-    update_schema: schemas.ProjectUpdate,
-    project: schemas.Project = Permission("edit", get_project_from_db),
-):
-    return Project.update(id=project.id, **update_schema.dict(exclude_unset=True))
-
-
-@router.delete("/{id}")
-async def delete_project(
-    project: schemas.Project = Permission("edit", get_project_from_db)
-):
-    return Project.delete(Project.get(id=project.id))
-
-
-@router.get("/user/", response_model=list[schemas.Project])
+@router.get("/user/", response_model=list[ProjectRead])
 async def get_user_projects(
     user: User = Depends(get_current_active_user),
+    manager: ProjectManager = Depends(ProjectManager),
 ):
-    return Project.filter(owner=user)
+    return manager.filter(Project.owner_id == user.id)
 
 
-@router.get("/{project_id}/tasks", response_model=list[schemas.Task])
-async def get_tasks_by_project(
-    project_id,
-    skip: int = 0,
-    limit: int = 100,
-    order_by: str = "created",
-    desc: bool = False,
-    _: User = Depends(get_current_active_user),
+@router.get("/user/detail", response_model=list[ProjectReadDetail])
+async def get_detail_user_projects(
+    user: User = Depends(get_current_active_user),
+    manager: ProjectManager = Depends(ProjectManager),
 ):
-    project = Project.get(id=project_id)
-    if project.show_completed_tasks:
-        return Task.filter(skip, limit, order_by, desc, project_id=project_id)
-
-    return Task.filter(
-        skip, limit, order_by, desc, project_id=project_id, is_done=False
-    )
+    return manager.filter(Project.owner_id == user.id)
 
 
 @router.get("/{id}/invite")
 async def get_invitation_code(
-    project: schemas.Project = Permission("invite", get_project_from_db),
+    project: Project = Permission("invite", router._get_item()),
+    manager: ProjectManager = Depends(ProjectManager),
 ):
-    return {"code": Project.generate_invitaion_code(project.id)}
+    return {"code": manager.generate_invitaion_code(project.id)}
 
 
-@router.get("/invitation/{code}", response_model=schemas.Project)
+@router.get("/invitation/{code}", response_model=ProjectReadDetail)
 async def accept_invitation(
     code: str,
-    user: User = Depends(get_current_active_user)
+    user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_session),
+    manager: ProjectManager = Depends(ProjectManager),
 ):
-    project = Project.validate_invitation_code(code)
+    project = manager.validate_invitation_code(code)
     if user not in project.participants and user != project.owner:
         project.participants.append(user)
-        db.session.commit()
-        db.session.refresh(project)
+        db.commit()
+        db.refresh(project)
         return project
     else:
-        raise HTTPException(status_code=404, detail="Current user is already participant of this project")
+        raise HTTPException(
+            status_code=404,
+            detail="Current user is already participant of this project",
+        )
 
 
-@router.get("/{id}/direct-invite")
+@router.get("/{id}/direct-invite/{email}", response_model=ProjectReadDetail)
 async def send_direct_invitation(
-    project: schemas.Project = Permission("invite", get_project_from_db),
+    email: EmailStr,
+    project: Project = Permission("invite", router._get_item()),
+    db: Session = Depends(get_session),
+    user_manager: UserManager = Depends(UserManager),
 ):
-    pass
+    target_user = user_manager.one(User.email == email)
+    if target_user not in project.participants and target_user != project.owner:
+        project.participants.append(target_user)
+        db.commit()
+        db.refresh(project)
+        return project
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail="Current user is already participant of this project",
+        )
+
+
+@router.post("/{id}/remove-user/{email}", response_model=ProjectReadDetail)
+async def remove_user_from_project(
+    email: EmailStr,
+    project: Project = Permission("invite", router._get_item()),
+    db: Session = Depends(get_session),
+    user_manager: UserManager = Depends(UserManager),
+):
+    target_user = user_manager.one(User.email == email)
+    if target_user in project.participants and target_user != project.owner:
+        project.participants.remove(target_user)
+        db.commit()
+        db.refresh(project)
+        return project
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail="User is not participant of this project",
+        )

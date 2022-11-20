@@ -1,159 +1,86 @@
-from typing import List, Type, Union
+from typing import Type
 
-from fastapi_sqlalchemy import db
-from sqlalchemy import MetaData
+from fastapi import Depends
+from sqlalchemy.exc import MultipleResultsFound, NoResultFound
+from sqlalchemy.sql.elements import BinaryExpression
+from sqlmodel import Session, SQLModel, select
 
 from app.core.exceptions import ObjectDoesNotExist
+from app.db import get_session
 
 
-class BaseManager:
-    @classmethod
-    def create(cls, disable_check: bool = False, **fields):
-        if not disable_check:
-            cls.check_fields(**fields)
-        instance = cls(**fields)
+class Manager:
+    model: Type[SQLModel] | None = SQLModel
+    in_schema: Type[SQLModel] | None = SQLModel
 
-        db.session.add(instance)
-        db.session.commit()
-        db.session.refresh(instance)
-        return instance
-
-    @classmethod
-    def delete(cls, instance):
-        db.session.delete(instance)
-        db.session.commit()
-
-    @classmethod
-    def all(
-        cls,
-        skip: int = 0,
-        limit: int = 100,
-        order_by: str = "created",
-        desc: bool = False,
-    ) -> List[Type]:
-        try:
-            if desc:
-                return (
-                    db.session.query(cls)
-                    .order_by(getattr(cls, order_by).desc())
-                    .offset(skip)
-                    .limit(limit)
-                    .all()
-                )
-            return (
-                db.session.query(cls)
-                .order_by(getattr(cls, order_by))
-                .offset(skip)
-                .limit(limit)
-                .all()
+    def __init__(self, session: Session = Depends(get_session)) -> None:
+        if not any([self.model, self.in_schema]):
+            raise AttributeError(
+                "Set attributes model, in_schema, read_schema for exact class."
             )
-        except AttributeError:
-            return db.session.query(cls).offset(skip).limit(limit).all()
+        self.session = session
 
-    @classmethod
-    def get(cls, **fields) -> Type:
-        cls.check_fields(**fields)
+    def get(self, id: int) -> model:
+        object = self.session.get(self.model, id)
+        if object:
+            return object
+        raise ObjectDoesNotExist(self.model, id)
 
-        expression = [getattr(cls, k) == fields[k] for k in fields.keys()]
+    def one(
+        self,
+        *expressions: list[BinaryExpression | bool],
+    ):
+        stmt = select(self.model).where(*expressions)
+        res = self.session.exec(stmt)
+        try:
+            return res.one()
+        except (MultipleResultsFound, NoResultFound):
+            raise ObjectDoesNotExist(self.model)
 
-        instance = db.session.query(cls).filter(*expression).first()
-        if instance:
-            return instance
+    def create(self, object: in_schema) -> model:
+        db_object = self.model.from_orm(object)
+        self.session.add(db_object)
+        self.session.commit()
+        self.session.refresh(db_object)
 
-        raise ObjectDoesNotExist(f"No {cls.__name__.lower()} with such parameters.")
+        return db_object
 
-    @classmethod
-    def update(cls, id, **updated_fields):
-        cls.check_fields(**updated_fields)
-        instance = cls.get(id=id)
+    def update(self, id, **updated_fields):
+        instance = self.get(id=id)
 
         for field in updated_fields:
             setattr(instance, field, updated_fields[field])
 
-        db.session.commit()
-        db.session.refresh(instance)
+        self.session.add(instance)
+        self.session.commit()
+        self.session.refresh(instance)
 
         return instance
 
-    @classmethod
+    def all(self, limit: int = 100, offset: int = 0) -> list[model]:
+        stmt = select(self.model).offset(offset).limit(limit)
+        res = self.session.exec(stmt).all()
+        return res
+
     def filter(
-        cls,
-        skip: int = 0,
+        self,
+        *expressions: list[BinaryExpression | bool],
         limit: int = 100,
-        order_by: str = "created",
-        desc: bool = False,
-        **fields,
-    ):
-        cls.check_fields(**fields)
+        offset: int = 0,
+    ) -> list[model]:
+        stmt = select(self.model).where(*expressions).offset(offset).limit(limit)
+        res = self.session.exec(stmt).all()
+        return res
 
-        expression = [getattr(cls, k) == fields[k] for k in fields.keys()]
+    def exists(self, *expressions: list[BinaryExpression | bool]) -> model | None:
+        stmt = select(self.model).where(*expressions)
+        res = self.session.exec(stmt)
         try:
-            if desc:
-                return (
-                    db.session.query(cls)
-                    .order_by(getattr(cls, order_by).desc(), cls.updated.desc())
-                    .filter(*expression)
-                    .offset(skip)
-                    .limit(limit)
-                    .all()
-                )
-            return (
-                db.session.query(cls)
-                .order_by(getattr(cls, order_by), cls.updated.desc())
-                .filter(*expression)
-                .offset(skip)
-                .limit(limit)
-                .all()
-            )
-        except AttributeError:
-            return (
-                db.session.query(cls)
-                .filter(*expression)
-                .offset(skip)
-                .limit(limit)
-                .all()
-            )
-
-    @classmethod
-    def get_or_false(cls, **fields) -> Union[Type, bool]:
-        try:
-            instance = cls.get(**fields)
-            return instance
-        except ObjectDoesNotExist:
-            return False
-
-    @classmethod
-    def exists(cls, **fields):
-        try:
-            cls.get(**fields)
+            res.one()
             return True
-        except ObjectDoesNotExist:
+        except (MultipleResultsFound, NoResultFound):
             return False
 
-    @classmethod
-    def _get_model_fields(cls) -> List[str]:
-        fields = []
-
-        for field in dir(cls):
-            if not field.startswith("_"):
-                if not callable(getattr(cls, field)) and not isinstance(
-                    getattr(cls, field), MetaData
-                ):  # noqa
-                    fields.append(field)
-
-        return fields
-
-    @classmethod
-    def check_fields(cls, **fields):
-        for field in fields.keys():
-            if field not in cls._get_model_fields():
-                raise ValueError(
-                    f"Field {field} is not suported, suported fields: {cls._get_model_fields()}"
-                )  # noqa
-
-    @classmethod
-    def refresh(cls, instance):
-        db.session.commit()
-        db.session.refresh(instance)
-
-        return instance
+    def delete(self, instance: model) -> None:
+        self.session.delete(instance)
+        self.session.commit()

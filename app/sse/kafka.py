@@ -9,8 +9,10 @@ from aiokafka import (
     TopicPartition,
 )
 from aioredis import Redis
+from kafka import KafkaProducer
 
 from app.models import User
+from app.schemas import Message
 
 logging.basicConfig(
     format="[%(asctime)-15s] [%(levelname)s]: %(message)s",
@@ -25,14 +27,14 @@ class RebalancerListener(ConsumerRebalanceListener):
     def __init__(self, lock):
         self.lock = lock
 
-    async def on_partitions_revoked(self, revoked):
+    async def on_partitions_revoked(self, _):
         log.info("revoking, waiting on lock")
         # wait until a single batch processing is done
         async with self.lock:
             pass
         log.info("revoked")
 
-    async def on_partitions_assigned(self, assigned):
+    async def on_partitions_assigned(self, _):
         pass
 
 
@@ -42,6 +44,18 @@ def serializer(value):
 
 def deserializer(serialized):
     return json.loads(serialized)
+
+
+async def load_initial_state(redis: Redis, hash_key: str) -> tuple[int, Counter]:
+    offset = -1
+    counts = Counter()
+    initial_counts = await redis.hgetall(hash_key)
+    for key, state in initial_counts.items():
+        state = json.loads(state)
+        offset = max([offset, state["offset"]])
+        counts[key] = state["count"]
+
+    return (offset, counts)
 
 
 async def consume(
@@ -60,30 +74,18 @@ async def consume(
     await consumer.start()
     consumer.assign([tp])
 
-    # Load initial state of aggregation and last processed offset
-    offset = -1
-    counts = Counter()
-    initial_counts = await redis.hgetall(REDIS_HASH_KEY)
-    for key, state in initial_counts.items():
-        state = json.loads(state)
-        offset = max([offset, state["offset"]])
-        counts[key] = state["count"]
+    offset, counts = await load_initial_state(redis, REDIS_HASH_KEY)
 
     # Same as with manual commit, you need to fetch next message, so +1
     consumer.seek(tp, offset + 1)
     try:
         async for msg in consumer:
-            yield {
-                "event": "new_message",
-                "data": {"topic": msg.topic, "value": msg.value},
-            }
-            try:
-                key = msg.key.decode("utf-8")
-                counts[key] += 1
-                value = json.dumps({"count": counts[key], "offset": msg.offset})
-                await redis.hset(REDIS_HASH_KEY, key, value)
-            except:  # noqa
-                pass
+            message = Message(**msg.value)
+            yield {"event": message.event, "data": message.body}
+            key = msg.key.decode("utf-8")
+            counts[key] += 1
+            value = json.dumps({"count": counts[key], "offset": msg.offset})
+            await redis.hset(REDIS_HASH_KEY, key, value)
     finally:
         await consumer.stop()
 
@@ -118,7 +120,7 @@ async def consume_old(
 
 
 async def produce(
-    message: bytes, topic: str = "default", key: bytes = b"default"
+    message: Message, topic: str = "default", key: bytes = b"default"
 ) -> None:
     producer = AIOKafkaProducer(
         bootstrap_servers="localhost:9092", value_serializer=serializer
@@ -127,7 +129,14 @@ async def produce(
     await producer.start()
     try:
         # Produce message
-        await producer.send_and_wait(topic, message, key)
+        await producer.send_and_wait(topic, message.dict(), key)
     finally:
         # Wait for all pending messages to be delivered or expire.
         await producer.stop()
+
+
+def produce_sync(message: Message, topic: str = "default", key: bytes = b"default"):
+    producer = KafkaProducer(
+        bootstrap_servers="localhost:9092", value_serializer=serializer
+    )
+    producer.send(topic, value=message.dict(), key=key)

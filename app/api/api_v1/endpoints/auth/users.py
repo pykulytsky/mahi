@@ -1,27 +1,33 @@
 from fastapi import Depends
 
-from app import schemas
 from app.api.deps import get_current_active_user
 from app.api.router import CrudRouter
-from app.models import User
+from app.managers import UserManager
+from app.models import User, UserCreate, UserEmail, UserRead, UserReadDetail, UserUpdate
 
 router = CrudRouter(
     model=User,
-    get_schema=schemas.User,
-    create_schema=schemas.UserCreate,
-    update_schema=schemas.UserUpdate,
+    manager=UserManager,
+    get_schema=UserRead,
+    create_schema=UserCreate,
+    update_schema=UserUpdate,
+    detail_schema=UserReadDetail,
     prefix="/users",
     tags=["users"],
 )
 
 
-@router.get("/me/", response_model=schemas.User)
+@router.get("/me/", response_model=UserReadDetail)
 async def get_me(
-    user: schemas.User = Depends(get_current_active_user),
+    user: User = Depends(get_current_active_user),
 ):
     return user
 
 
-@router.get("/me/activities", response_model=list[schemas.Activity])
-async def get_my_activities(user: schemas.User = Depends(get_current_active_user)):
-    return user.activities[::-1]
+@router.get("/email/{email}", response_model=list[UserEmail])
+async def get_users_by_email(
+    email: str,
+    _: User = Depends(get_current_active_user),
+    manager: UserManager = Depends(UserManager),
+):
+    return manager.filter(User.email.like("%" + email + "%"))
