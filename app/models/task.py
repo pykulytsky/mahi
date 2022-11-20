@@ -9,7 +9,7 @@ from app.models import Timestamped
 from app.models.link_tables import Assignee, TaskTagLink
 
 if TYPE_CHECKING:
-    from app.models import Project, Reaction, Section, Tag, User
+    from app.models import Project, Reaction, Section, Tag, User, Comment
 
 
 class TaskBase(SQLModel):
@@ -44,6 +44,7 @@ class Task(TaskBase, Timestamped, table=True):
     section: Optional["Section"] = Relationship(back_populates="tasks")
     tags: Optional["Tag"] = Relationship(back_populates="tasks", link_model=TaskTagLink)
     reactions: list["Reaction"] = Relationship(back_populates="task")
+    comments: list["Comment"] = Relationship(back_populates="task")
 
     owner_id: int | None = Field(default=None, foreign_key="user.id")
     owner: Optional["User"] = Relationship(back_populates="tasks")

@@ -7,7 +7,7 @@ from sqlmodel import Field, Relationship, SQLModel
 from .link_tables import Assignee, Participant, UserReactionLink
 
 if TYPE_CHECKING:
-    from app.models import Project, Reaction, Section, Tag, Task
+    from app.models import Project, Reaction, Section, Tag, Task, Comment
 
 
 class UserBase(SQLModel):
@@ -43,6 +43,7 @@ class User(UserBase, table=True):
     reactions: list["Reaction"] = Relationship(
         back_populates="users", link_model=UserReactionLink
     )
+    comments: list["Comment"] = Relationship(back_populates="owner")
 
 
 class UserCreate(UserBase):

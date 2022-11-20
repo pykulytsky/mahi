@@ -9,7 +9,7 @@ from app.models.base import Timestamped
 from .link_tables import Participant
 
 if TYPE_CHECKING:
-    from app.models import Section, Task, User
+    from app.models import Section, Task, User, Comment
 
 
 class ProjectBase(SQLModel):
@@ -38,6 +38,7 @@ class Project(ProjectBase, Timestamped, table=True):
         back_populates="project", sa_relationship_kwargs={"order_by": "Task.order"}
     )
     sections: list["Section"] = Relationship(back_populates="project")
+    comments: list["Comment"] = Relationship(back_populates="project")
 
     def __acl__(self):
         acl_list = [

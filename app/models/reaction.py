@@ -5,7 +5,7 @@ from sqlmodel import Field, Relationship, SQLModel
 from app.models.link_tables import UserReactionLink
 
 if TYPE_CHECKING:
-    from app.models import Task, User
+    from app.models import Task, User, Comment
 
 
 class ReactionBase(SQLModel):
@@ -17,6 +17,9 @@ class Reaction(ReactionBase, table=True):
 
     task_id: int | None = Field(default=None, foreign_key="task.id")
     task: Optional["Task"] = Relationship(back_populates="reactions")
+
+    comment_id: int | None = Field(default=None, foreign_key="comment.id")
+    comment: Optional["Comment"] = Relationship(back_populates="reactions")
 
     users: list["User"] = Relationship(
         back_populates="reactions", link_model=UserReactionLink

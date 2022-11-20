@@ -32,3 +32,4 @@ from .task import (
     TaskUpdate,
 )
 from .user import User, UserCreate, UserEmail, UserRead, UserReadDetail, UserUpdate
+from .comment import CommentBase, Comment
